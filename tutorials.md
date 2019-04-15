@@ -148,6 +148,25 @@ class Index_Controller extends Yaf_Request_Abstract {
 
 #### 2_3.yaf的配置项
 
+
+
+###### yaf 的配置选项
+
+| 选项名称             | 默认值  | 可修改范围     | 更新记录                                                     |
+| -------------------- | ------- | -------------- | :----------------------------------------------------------- |
+| yaf.environ          | product | PHP_INI_ALL    | 环境名称，当用INI作为Yaf的配置文件时，这个指明了Yaf将要在INI配置中读取的节的名字 |
+| yaf.library          | NULL    | PHP_INI_ALL    | 全局类库的目录路径                                           |
+| yaf.cache_config     | 0       | PHP_INI_SYSTEM | 是否缓存配置文件(只针对INI配置文件生效，打开此选项可在复杂配置的情况下提高新功能) |
+| yaf.name_suffix      | 1       | PHP_INI_ALL    | 在处理 Controller, Action, Plugin, Model 的时候，类名中关键信息是否是后缀式，比如 UserModel, 在前缀模式下则变成了 ModelUser |
+| yaf.name_separator   | ""      | PHP_INI_ALL    | 在处理 Controller, Action, Plugin, Model 的时候，前缀和名字之间的分隔符，默认为空。也就是说比如 UserPlugin 加入设置为 "_", 则判断的依据变成 "User_Plugin", 这个主要是为了兼容 ST 已有的命名规范 |
+| yaf.forward_limit    | 5       | PHP_INI_ALL    | forward 的最大嵌套深度                                       |
+| yaf.use_namespace    | 0       | PHP_INI_SYSTEM | 开启时，Yaf 将使用命名空间的方式注册自己的类，比如 Yaf_Application 将会变成 Yaf \ Application |
+| yaf.use_sql_autoload | 0       | PHP_INI_ALL    | 开启时，Yaf 在加载不成功的情况下，会继续让PHP的自动加载函数来加载，从性能上考虑，除非特殊情况，否则默认最好保持此选项关闭掉。 |
+
+> （警告：在开启 yaf.cache_config 的情况下，yaf 会使用 INI 文件路径作为 Key，这就有一个陷阱，就是如果在一台服务器上同时运行两个应用，那么它们必须不能使用同一个路径名下的 INI 配置文件，否则就会出现 Application Path 混乱的情况。故尽量不要使用相对路径。）
+>
+> 
+
 ## 3.quick start
 
 #### 3_1.需要些什么？

@@ -49,13 +49,102 @@ yaf是一个C语言编写的PHP框架
 
 #### 1_3.流程图
 
+
+
+Yaf提供了完整的一套API，并支持Bootstrap和插件机制，流程图如下：
+
+![img](http://www.laruence.com/manual/images/yaf_sequence.png)
+
+
+
 #### 1_4.yaf的性能
+
+
+
+用Apache 的 ab 工具可模拟并发量进行测试。
+
+
 
 ## 2.yaf的安装/配置
 
 #### 2_1.yaf的安装
 
+yaf只支持PHP5.2+的版本
+
+yaf需要 SPL 的支持，SPL在PHP5中是默认开启的扩展模块
+
+yaf需要PCRE的支持，PCRE也是在PHP5中默认开启的扩展模块
+
+###### 在Linux下的安装步骤
+
+1). 下载yaf的最新版本，解压缩以后，进入yaf的源码目录，依次执行这几条命令：
+
+```php
+$PHP_BIN phpize
+
+./configure --with-php-config=$PHP_BIN/php-config
+
+make
+
+make install
+```
+
+然后在php.ini载入yaf.so，然后重启PHP服务
+
+Yaf_Request_Abstract的getPost，getQuery等方法没有对应的setter方法，并且这些方法是直接从PHP内部的$_POST,$_GET等大变量本身通过只读方式拿过来的查询值。所以就有一个问题，通过在PHP脚本中对这些变量的修改，并不能反映到getPost/getQuery等方法上面。
+
+例子：
+
+```php
+<?php
+class Index_Controller extends Yaf_Request_Abstract {
+    public function indexAction () {
+        $_POST['name'] = "new_name";
+        // 此时对$_POST的修改，并不能反映到getPost上
+        echo $this->getRequest->getPost("name"); // echo old_name
+    }
+}
+```
+
+当然这样设计是经过深思熟虑的，也可以不依赖PHP的variable_orders的配置，但是带来一个问题就是QA和Rd无法通过修改这些变量来做测试数据。
+
+所以Yaf专门提供了一个Debug模式，在这个模式下，getPost / getQuery / getServer / getCookie 将从符号表中的对应变量来查询得到值，从而可以让我们直接对PHP的超级变量做的修改能反映到对应的 Yaf_Request_Abstract 的方法上。
+
+> （注意：请不要在正式的环境中以 Debug 模式来编译 Yaf，这个做一是有一定性能损耗，二是即使这么做了，但这种做法与 $_POST 这类大变量设计之初的"只读"特性相违背。所以我们在 yaf_Application 的 construct() 里，如果当前 yaf 是以 debug 模式编译i的，会触发一个 E_STRICT 的提示:
+>
+>   Strict Standards: you are running ap in debug mode）
+>
+> 例子：以 debug 模式编译yaf
+>
+> ```
+> $PHP_BIN/phpize
+> ./configure --enable-ab-debug --with-php-config=$PHP_BIN/php-config
+> make
+> make install
+> ```
+>
+> 
+
 #### 2_2.yaf定义的常量
+
+
+
+| 常量（启用命名空间后的常量名）                               | 说明                                                |
+| :----------------------------------------------------------- | --------------------------------------------------- |
+| YAF_VERSION （Yaf \ VERSION）                                | Yaf 框架的三位版本信息                              |
+| YAF_ENVIRON (Yaf \ ENVIRON)                                  | Yaf 的环境常量，指明了要读取的配置节，默认是product |
+| YAF_ERR_STARTUP_FAILED （Yaf \ ERR \ STARTUP_FAILED）        | Yaf 的错误代码常量，表示启动失败，值 512            |
+| YAF_ERR_ROUTE_FAILED (Yaf \ ERR \ ROUTE_FAILED)              | Yaf 的错误代码常量，表示路由失败，值 513            |
+| YAF_ERR_DISPATCH_FAILED (Yaf \ ERR \ DISPATCH_FAILED)        | Yaf 的错误代码常量，表示分发失败，值 514            |
+| YAF_ERR_NOTFOUND_MODULE (Yaf \ ERR \ NOTFOUD \ MODULE)       | Yaf 的错误代码常量，找不到指定的模块，值 515        |
+| YAF_ERR_NOTFOUND_CONTROLLER (Yaf \ ERR \ NOTFOUD \ CONTROLLER) | Yaf 的错误代码常量，找不到指定的 Controller，值 516 |
+| YAF_ERR_NOTFOUND_ACTION (Yaf \ ERR \ NOTFOUD \ ACTION)       | Yaf 的错误代码常量，找不到指定的 Action，值 517     |
+| YAF_ERR_NOTFOUND_VIEW (Yaf \ ERR \ NOTFOUD \ VIEW)           | Yaf 的错误代码常量，找不到指定的 View，值 518       |
+| YAF_ERR_CALL_FAILED (Yaf \ ERR \ CALL_FAILED)                | Yaf 的错误代码常量，调用失败，值 519                |
+| YAF_ERR_AUTOLOAD_FAILED (Yaf \ ERR \ AUTOLOAD_FAILED)        | Yaf 的错误代码常量，自动加载类失败，值 520          |
+| YAF_ERR_TYPE_ERROR (Yaf \ ERR \ TYPE_ERROR)                  | Yaf 的错误代码常量，表示关键逻辑的参数错误，值 521  |
+
+
 
 #### 2_3.yaf的配置项
 

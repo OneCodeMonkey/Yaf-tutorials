@@ -305,6 +305,28 @@ application
 
 #### 3_3.使用代码生成工具
 
+
+
+yaf 提供了代码生成工具 [yaf_code_generator](https://github.com/laruence/php-yaf/tree/master/tools/cg) ，我们可以用 yaf_cg 这个命令来生成一个简单的 Demo 应用
+
+```shell
+php-yaf-src/tools/cg/yaf_cg helloWorld
+```
+
+将得到的 helloworld 目录拷贝到 WebServer 的 documentRoot 目录下，然后用浏览器访问：
+
+```shell
+http://{hostname}/helloworld
+```
+
+效果等同于访问 
+
+```shell
+http://{hostname}/helloworld/application/index.php
+```
+
+
+
 ## 4.配置文件
 
 #### 4_1.必要的配置项

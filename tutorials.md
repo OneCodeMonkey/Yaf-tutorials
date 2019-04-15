@@ -331,7 +331,38 @@ http://{hostname}/helloworld/application/index.php
 
 #### 4_1.必要的配置项
 
+
+
+yaf 和用户共用一个配置空间，也就是在 Yaf_Application 初始化时给出的配置文件中的配置。作为区别，Yaf 的配置项均以 ap 为前缀，Yaf 的核心必不可少的配置只有一个。
+
+> （注意：yaf 通过在不同的环境中，选取不同的配置节，再结合配置可继承，来实现 “一套配置，多种环境公用” ，比如：线上 -> 测试 -> 开发）
+>
+> | 名称                  | 值类型 | 说明               |
+> | --------------------- | ------ | ------------------ |
+> | application.directory | String | 应用的绝对目录路径 |
+
+
+
 #### 4_2.可选的配置项
+
+
+
+Yaf 的可选配置项
+
+| 名称                                         | 值类型        | 默认值                             | 说明                                                         |
+| -------------------------------------------- | ------------- | ---------------------------------- | ------------------------------------------------------------ |
+| application.ext                              | String        | php                                | PHP脚本的扩展名                                              |
+| application.bootstrap                        | String        | Bootstrapplication.php             | Bootstrap路径（绝对路径）                                    |
+| application.library                          | String        | application.directory + "/library" | 本地类库的绝对路径地址                                       |
+| application.baseUri                          | String        | NULL                               | 在路由中，需要忽略的路径前缀，一般不需要设置，Yaf 会自动判断。 |
+| application.dispatcher.defaultModule         | String        | index                              | 默认的模块                                                   |
+| application.dispatcher.throwException        | Bool          | True                               | 在出错的时候，是否抛出异常                                   |
+| application.dispatcher.catchException        | Bool          | False                              | 是否使用默认的异常捕获 Controller, 如果开启，那么在有未捕获的异常时，控制权会交给 ErrorController 的 errorAction() ，可以通过 $request->getException() 获得此异常对象 |
+| application.dispatcher.defaultAction         | String        | index                              | 默认的控制器名                                               |
+| application.view.ext                         | String        | phtml                              | 使用的视图模板文件的扩展名                                   |
+| application.modules  和 application.system.* | String String | Index                          *   | 声明存在的模块名，请注意：如果我们定义这个值，一定要定义 Index Module，通过这个属性可以修改 yaf 的 runtime configure，比如 application.system.lowcase_path, 此处注意只有 PHP_INI_ALL 的配置项才可以在这里被修改。 |
+
+
 
 ## 5.自动加载器
 

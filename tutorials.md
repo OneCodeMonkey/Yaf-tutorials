@@ -171,7 +171,137 @@ class Index_Controller extends Yaf_Request_Abstract {
 
 #### 3_1.需要些什么？
 
+Yaf 已经正确编译安装好。
+
 #### 3_2.Hello world
+
+###### 目录结构
+
+对于 yaf 的应用，都应遵循类似下面的目录结构
+
+例：一个典型的 yaf 项目目录结构
+
+```
+public
+|-	index.php  // 入口文件
+|-	.htaccess  // 伪静态，重写规则
+|+ 	css
+|+	img
+|+	js
+conf
+|-	application.ini  // 配置文件
+application
+|+	controllers
+	|-	Index.php  // 默认控制器
+|+	views
+	|+	index  // 控制器
+		|-	index.phtml  // 默认视图
+|+	models
+|+	modules  // 其他模块
+|+	library  // 本地类库
+|+	plugins  // 插件目录
+```
+
+###### 入口文件
+
+入口文件是所有请求的入口，一般借助于 rewrite 规则，把所有请求都定向到这个如开口文件
+
+> 例：一个经典的入口文件 public / index.php
+>
+> ```php
+> <?php
+> define("APP_PATH", realpath(dirname(__FILE__) . '/../'));
+> $app = new Yaf_Application(APP_PATH . "/conf/application.ini");
+> $app->run();
+> ```
+>
+> ###### 重写规则
+>
+> 除非我们使用的是基于 query string 的路由协议（Yaf_Route_Simple, Yaf_Route_Supervar）, 否则我们就要使用 WebServer 提供的 Rewrite 规则，把所有应用请求重定向到我们定义的入口文件
+>
+> 例：Apache Rewrite 规则（httpd.conf中定义，或根目录下 .htaccess 文件中定义）
+>
+> ```xml
+> #.htaccess
+> RewriteEngine On
+> RewriteCond %{REQUEST_FILENAME} !-f
+> RewriteRule .* index.php
+> ```
+>
+> 例：Nginx Rewrite 规则 （nginx.conf中定义）
+>
+> ```json
+> server {
+>     listen ****;
+>     server_name domain.name;
+>     root document_root;
+>     index index.php index.html index.htm;
+>     
+>     if (!-e $request_filename) {
+>         rewrite ^/(.*) /index.php/$1 last;
+>     }
+> }
+> ```
+>
+> ###### 配置文件
+>
+> 在 Yaf 中，配置文件支持集成，支持分节，并对PHP常量进行支持，我们不必担心配置文件太大而造成解析性能上的问题，因为 Yaf 会在第一个运行时 的时候就载入配置文件，把格式化后的内容保持在内存中，直到配置文件有变化了，才会再次载入。
+>
+> 例：一个简单的配置文件 application / conf / application.ini
+>
+> ```
+> [product]
+> ;支持直接写PHP中的已定义常量
+> application.directory=APP_PATH "/application/"
+> ```
+>
+> ###### 控制器
+>
+> 在 Yaf 中，默认的模块 / 控制器 / 动作，都是以 Index 命名，当然这可以通过 配置文件来修改。
+>
+> 对于默认模块，控制器的目录是在 application 目录下的 controllers 目录下，Action 的命名规则是 ”名字 + Action“
+>
+> 例：默认控制器 application / controllers / Index.php
+>
+> ```php
+> <?php
+> class IndexController extends Yaf_Controller_Abstract {
+>     public function indexAction () {
+>         $this->getView()->assign("content", "Hello Yaf!");
+>     }
+> }
+> ```
+>
+> ###### 视图文件
+>
+> Yaf 支持简单的视图引擎，并支持用户自定义自己的视图引擎，比如 Smarty 引擎
+>
+> 对于默认模块，视图文件的路径是在 application 目录下的 views 目录下，以小写的  action 为名的目录中
+>
+> 例：一个默认 Action 的视图 application / views / index / index.phtml
+>
+> ```php+HTML
+> <html>
+> <head>
+> 	<title>Hello Yaf</title>        
+> </head>
+> <body>
+> 	<?php echo $content; ?>    
+> </body>    
+> </html>
+> ```
+>
+> ###### 运行
+>
+> 在浏览器里我们输入域名：
+>
+> ```
+> http://{hostname}/application/index.php
+> ```
+>
+> 此时如果前面操作无误的话，我们能看到浏览器页面正常显示：Hello Yaf!
+>
+> 
 
 #### 3_3.使用代码生成工具
 

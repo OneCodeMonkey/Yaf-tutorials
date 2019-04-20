@@ -478,13 +478,75 @@ class Bootstrap extends Yaf_Bootstrap_Abstract{
 
 #### 7_1.简介
 
+Yaf 支持用户自定义插件来扩展 Yaf 的功能，这些插件都是一些类，他们都必须继承自 Yaf_Plugin_Abstract. 插件要发挥功效也必须在 Yaf 中进行注册，然后在适当时机 Yaf 就会调用它。
+
 #### 7_2.Yaf支持的Hook
+
+支持 6 个 Hook，如下表所示：
+
+| 触发顺序 | 名称                 | 触发时机               | 说明                                                         |
+| -------- | -------------------- | ---------------------- | ------------------------------------------------------------ |
+| 1        | routerStartup        | 在路由启动之前触发     | 这是 7 个事件中最早的要给，但是一些全局自定义的工作还是应该放在 Bootstrap 中去完成 |
+| 2        | routerShutdown       | 路由结束之后触发       | 此时路由一定正确完成，否则这个事件不会触发                   |
+| 3        | dispatchLoopStartup  | 分发循环开始之前被触发 |                                                              |
+| 4        | preDispatch          | 分发之前触发           | 如果在一个请求处理过程中，发生了 forward ,则这个事件会被多次触发 |
+| 5        | postDispatch         | 分发结束之后触发       | 此时动作已经执行结束，视图也已经渲染完成，和 preDispatch 类似，此事件也可能触发多次 |
+| 6        | dispatchLoopShutdown | 分发循环结束之后触发   | 此时表示所有的业务逻辑都已完成，但是响应还没有发送           |
+
+
 
 #### 7_3.定义插件
 
+插件类是用户编写的，但是它需要继承自 Yaf_Plugin_Abstract 实例和 Yaf_Response_Abstract 实例，一个插件类的例子如下：
+
+例：插件类
+
+```php
+<?php
+class UserPlugin extends Yaf_Plugin_Abstract {
+    public function routerStartup (Yaf_Request_Abstract $request, Yaf_Request_Abstract $response)
+    {
+        //
+    }
+    public function routerShutdown (Yaf_Request_Abstract $request, Yaf_Response_Abstract $response)
+    {
+        //
+    }
+}
+```
+
+这个例子中插件 UserPlugin 只关心两个事件，所以只定义了两个方法。
+
 #### 7_4.注册插件
 
+只有向 Yaf_Dispatcher注册了插件之后，我们的插件才能生效。一般的插件注册都会放在 Bootstrap 中进行。
+
+例：注册插件
+
+```
+<?php
+class Bootstrap extends Yaf_Bootstrap_Abstract {
+    public function _initPlugin (Yaf_Dispatcher $dispatcher)
+    {
+        $user = new UserPlugin();
+        $dispatcher->registerPlugin($user);
+    }
+}
+```
+
+
+
 #### 7_5.插件目录
+
+一般地，插件应该放置在 APPLICATION_PATH 下的 plugins 目录下，这样在自动加载的时候加载器通过类名，发现这是个插件类，就会在这个目录下查找。
+
+当然插件也可以放在任何你想放置的地方，只要最终能达到把这个类加载进来的目的就没问题
+
+> 更多详细内容参考 
+>
+> [Yaf_Plugin_Abstract]: http://www.laruence.com/manual/yaf.class.plugin.html
+>
+> 
 
 ## 8.路由和路由协议
 

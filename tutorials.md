@@ -368,15 +368,67 @@ Yaf 的可选配置项
 
 
 
-Yaf 在自启动的时候，会通过 SPL 注册一个自己的 Autoloader， 出于性能的考虑，对于框架相关的 MVC 类
+Yaf 在自启动的时候，会通过 SPL 注册一个自己的 Autoloader， 出于性能的考虑，对于框架相关的 MVC 类，Yaf Autoloader 只以映射目录的方式尝试一次。
+
+注意：Yaf 支持在PHP脚本中触发对 Controller 的自动加载，但因为 Controller 的定位需要根据 Module 路由结果来判断，这就造成了在 Bootstrap 或者 RouteStartUp 之前无法确定。所以对于 Controller 的自动加载，Yaf 将只尝试加载默认的 Module 的 Controller ，也就是只在 “{项目路径} / controllers” 目录下寻找
+
+具体的目录映射规则如下：
+
+###### Yaf 目录映射规则：
+
+| 类型     | 后缀或者前缀，可通过php.ini中的ap.name_suffix切换 | 映射路径                                                     |
+| -------- | ------------------------------------------------- | ------------------------------------------------------------ |
+| 控制器   | Controller                                        | 默认模块下名为 {项目路径 / controllers / ，否则为 {项目路径} / modules / {模块名} / controllers / |
+| 数据模型 | Model                                             | {项目路径} / models /                                        |
+| 插件     | Plugin                                            | {项目路径} / plugins /                                       |
+
+而对于非框架 MVC 相关的类，Yaf 支持全局类和自身类的两种加载方式，并且 Yaf 支持大小写敏感和不敏感两种方式来处理文件路径。
 
 
 
 #### 5_1.全局类和自身类（本地类）
 
+Yaf 为了方便在一台服务器上部署的不同产品之间共享公司级别的共享库，支持全局类和本地类两种加载方式。
+
+全局类是指所有产品之间共享的类，这些类库的路径是通过 ap.library 在php.ini ，或在PHP编译时支持了 with-config-file-scan-dir ，可以写在 ap.ini 里。
+
+本地类是指产品自身的类，这些类库的路径是通过在产品的配置文件中，通过 ap.library 配置，在 Yaf 中通过调用 Yaf_Loader 的 registerLocalNamespace 的方法，来声明哪些类前缀是本地类。
+
+> 注意：在 use_spl_autoload 此项配置关闭的情况下， Yaf Autoloader 在一次找不到的情况下，会立即返回，而剥夺其后的自动加载器的执行机会。
+
 #### 5_2.类的加载规则
 
+类的加载规则都是一样的： Yaf 规定类名中必须包含路径信息，也就是以 “_” 分割的目录信息，Yaf 将依照类名中的目录信息完成自动加载。如下的例子在没有声明本地类的情况下：
+
+例：一个映射的例子 Zend_Dummy_Foo
+
+```php
+// Yaf 将在如下路径寻找类 Foo_Dummy_Bar
+{类库路径（php.ini中指定的ap.library）}/Foo/Dummy/Bar.php
+```
+
+而通过下面这种方式调用 registerLocalNamespace:
+
+```php
+// 声明，凡是以 Foo 和 Local 开头的类，都是本地类
+$loader = Yaf_Loader::getIgnstance();
+$loader->registerLocalNamespace(array("Foo", "Local"));
+```
+
+那么对于刚才的例子，将会在以下路径里寻找 Foo_Dummy_Bar
+
+例：一个映射的例子 Zend_Dummy_Bar
+
+```php
+// Yaf 将在如下路径寻找类 Foo_Dummy_Bar
+{类库路径（php.ini中指定的ap.library）}/Foo/Dummy/Bar.php
+```
+
+
+
 ## 6.使用Bootstrap
+
+
 
 #### 6_1.简介
 

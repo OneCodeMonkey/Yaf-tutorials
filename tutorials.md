@@ -552,15 +552,273 @@ class Bootstrap extends Yaf_Bootstrap_Abstract {
 
 #### 8_1.概述
 
+路由作为负责解析一个请求，并且决定交给哪个module，哪个controller，哪个action去处理的角色，它同时也定义了一种方法来实现用户自定义路由，这也使得它成为最重要的一个 MVC 组件。
+
+为了方便自定义路由，Yaf 采用更灵活的路由器和路由协议分离的模式。也就是一个固定不变的路由器，配合各种可自定义的路由协议，来实现灵活多变的路由策略。
+
 #### 8_2.设计
+
+作为一个应用中的路由组件是很重要的，理所当然地路由组件是抽象的，这样允许开发者很容易地设计出我们自定义的路由协议。然而默认的路由组件其实已经服务的很好了。
+
+当我们确实需要用一个非标准的路由协议时，我们可以自定义一个自己的路由协议而放弃默认的路由协议。事实上路由组件由两部分组成：路由器（Yaf_Router）和路由协议（Yaf_Route_Abstract）.
+
+路由协议事实上主要负责匹配我们预先定义好的路由协议，意思就是我们只有一个路由器，当我们可以有很多路由协议，路由器主要负责管理和运行路由链，它根据路由协议栈倒序依次调用各个路由协议，直到某个路由协议返回成功以后，就匹配成功。
+
+> 注意：路由注册的顺序很重要，最后注册的路由协议，最先尝试路由，这就有个陷阱
+
+路由的过程发生在 dispatch 过程中的最开始，并且路由解析仅发生一次，路由过程在任何控制器或动作被 dispatch 之前被执行，一旦路由成功，路由器会将解析出的信息传递给请求对象（Yaf_Request_Abstract object），这些信息包括 module，controller，action，用户参数等。然后 dispatcher 会按照这些信息派遣正确的控制器动作。路由器的插件 Hook 是 routerStartup 和 routerShutdown，顾名思义一个在路由解析前，一个在路由解析后被调用。
 
 #### 8_3.默认情况
 
+默认情况下，我们的路由器是 Yaf_Router, 默认使用的路由协议是 Yaf_Route_Static, 这是基于 HTTP 路由的。它期望一个请求是 HTTP 请求并且请求对象使用 Yaf_Request_HTTP
+
 #### 8_4.使用路由
+
+使用路由既可以让其很复杂，同时也可以让其很简单，这取决于我们的应用怎么设计的。然而使用一个路由是很简单的，我们可以添加路由协议给路由器。
+
+不同的路由协议如下：
+
+[Yaf_Route_Simple]: http://www.laruence.com/manual/yaf.routes.usage.html
+[Yaf_Route_Supervar]: http://www.laruence.com/manual/yaf.routes.usage.html
+[Yaf_Route_Static]: http://www.laruence.com/manual/yaf.routes.usage.html
+[Yaf_Route_Map]: http://www.laruence.com/manual/yaf.routes.usage.html
+[Yaf_Route_Rewrite]: http://www.laruence.com/manual/yaf.routes.usage.html
+[Yaf_Route_Regex]: http://www.laruence.com/manual/yaf.routes.usage.html
+
+首先看下路由器是如何让路由协议与之一起工作的，在我们添加任何路由协议之前，我们必须要拿到 Yaf_Route 实例，我们通过派遣器 Yaf_Dispatcher 的 getRouter() 方法来得到默认的路由器
+
+```php
+<?php
+$router = Yaf_Dispatcher::getInstance()->getRouter();
+```
+
+一旦我们有了路由器实例，我们就能通过它来添加我们自定义的一些路由协议：
+
+```php
+<?php
+$router->addRoute('myRoute', $route);
+$router->addRoute('myRoute1', $route);
+```
+
+除此之外，我们还可以直接在配置文件中添加我们的路由协议：
+
+例：配置添加路由协议的例子
+
+```ini
+[common]
+;自定义路由
+;注意，顺序很关键
+routes.regex.type="regex"
+routes.regex.match="#^/list/([^/]*)/([^/]*)#"
+routes.regex.route.controller=Index
+routes.regex.route.action=action
+routes.regex.map.1=name
+routes.regex.map.2=value
+
+;添加一个名为 simple 的路由协议
+routes.simple.type="simple"
+routes.simple.controller=c
+routes.simple.module=m
+routes.simple.action=a
+
+;添加一个名为 supervar 的路由协议
+routes.supervar.type="supervar"
+routes.supervar.varname=r
+
+[product:common]
+;product节是Yaf默认关心的节，添加一个名为 rewrite 的路由协议
+routes.rewrite.type="rewrite"
+routes.rewrite.match="/product/:name/:value"
+```
+
+> 注意：路由协议的顺序很重要，用 Yaf 要保证路由协议的添加顺序和在配置文件中的顺序相同
+
+例：在 Bootstrap 中通过调用 Yaf_Router::addConfig 添加定义在配置中的路由协议
+
+```php
+<?php
+class Bootstrap extends Yaf_Bootstrap_Abstract {
+    public function _initRoute (Yaf_Dispatcher $dispatcher)
+    {
+        $router = Yaf_Dispatcher::getInstance()->getRouter();
+        // 添加配置中的路由
+        $router->addConfig(Yaf_Registry::get("config")->routes);
+    }
+}
+```
+
+> 其实路由器也提供了不同的方法来得到和设置包含在它内部的信息，我们可以用下面两个方法
+>
+> getCurrentRoute()    // 在路由结束之后，获取起作用的路由协议
+>
+> getRoute(), getRoutes()    // 获取路由协议
 
 #### 8_5.路由协议详解
 
+###### 默认路由协议
+
+默认的路由协议 Yaf_Route_Static, 就是分析请求中的 request_uri, 在去除掉 base_uri 以后，获取到真正负载路由信息的 request_uri 片段，具体的策略是根据 "/" 对 request_uri 分段，依次得到 Module, Controller, Action, 在得到 Module 之后，还需要根据 Yaf_Application::$modules 来判断带你 Module 是否是合法的 Module，如果不是那么认为 Module 并没有体现在 request_uri 中，而把原 Module 当做 Controller， 原 Controller 当做 Action：
+
+例：默认路由协议
+
+```php
+<?php
+/**
+ * 对于请求 request_uri 为 "/ap/foo/bar/dummy/1", base_uri 为 "/ap",则最后参加路由的 request_uri 为 "/foo/bar/dummy/1"
+ * 然后通过对 URL 分段，得到如下信息 foo, bar, dummy, 1。然后判断 foo 是不是一个合法的 Module，如果不是，则认为结果是
+ */
+  ['module' => '默认模块', 'controller' => 'bar', 'action' => 'dummy', 'params' => [1 => null]]
+/**
+ * 而如果在配置文件中定义了 ap.modules = "Index, Foo",
+ * 则此处就会认为 foo 是一个合法模块，则结果如下：
+ */
+  ['module' => 'foo', 'controller' => 'bar', 'action' => 'dummy', 'params' => [1 => null]]
+```
+
+注意：当只有一段路由信息时，比如对于上面的例子，请求的 URI 为 /ap/foo, 则默认路由和下面要提到的 Yaf_Route_Supervar 会首先判断 ap.action_prefer, 如果 true，则把 foo 当作 Action，否则当作 Controller
+
+###### Yaf_Route_Simple
+
+Yaf_Route_Simple 是基于请求中的 query_string 来做路由的，在初始化一个 Yaf_Route_Simple 路由协议的时候，我们需要给出 3 个参数，这 3 个参数分别代表在 query string 中的 Module, Controller, Action 的变量名：
+
+例：Yaf_Route_Simple
+
+```php
+<?php
+/**
+ * 指定3个变量名，
+ * $router = new Yaf_Route_Simple("m", "c", "a");
+ * $router->addRoute("name", $route);
+ * 对于此请求：http://{hostname}/index.php?c=index&a=test
+ * 解析得到的结果如下
+ */
+  ['module' => '默认模块', 'controller' => 'index', 'action' => 'test'] 
+```
+
+> 注意：只有在 query string 中不包含任何3个参数之一的情况下， Yaf_Route_Simple 才返回失败，将路由控制权交给下一个路由协议
+
+###### Yaf_Route_Supervar
+
+Yaf_Route_Supervar 和 Yaf_Route_Simple 类似，都是在 query string 中获取路由信息，不同的是它获取的是一个类似包含整个路由信息的 request_uri
+
+例： Yaf_Route_Supervar
+
+```php
+<?php
+/**
+ * 指定 supervar 的变量名
+ * $router = new Yaf_Route_Supervar("r");
+ * $router->addRoute("name", $route);
+ * 对于此请求：http://{hostname}/index.php?r=/a/b/c
+ * 解析得到的结果如下
+ */
+  ['module' => 'a', 'controller' => 'b', 'action' => 'c']  
+```
+
+> 注意：在 query string 中不包含 supervar 变量的时候，Yaf_Route_Supervar 会返回失败，将路由控制权交给下一个路由协议
+
+###### Yaf_Route_Map
+
+Yaf_Route_Map 协议是一种简单的路由协议，它将 Request_uri 以 “/” 分节，组合在一起，形成一个分层的控制器或动作的路由结果。Yaf_Route_Map 的构造函数接受两个参数，第一个参数表示路由结果是作为动作的路由结果还是控制器的路由结果。默认的是动作路由结果，第二个参数是一个字符串，表示一个分隔符。如果设置了这个分隔符，那么在 Request_uri， 分隔符之前的作为路由信息载体，而之后的作为请求参数。
+
+例：映射路由协议
+
+```php
+<?php
+/**
+ * 对于请求 request_uri 为"/ap/foo/bar", base_uri为"/ap",则最后参加路由的 request_uri 为"/foo/bar"
+ * 然后通过对 URL 分节，得到 "foo","bar",组合在一起以后，得到路由结果 foo_bar，然后根据在构造 Yaf_Route_Map 的时候是否指明了 【控制器优先】，如果没有则把结果当作是 Action 的路由结果。否则则认为是 Controller 的路由结果，默认 Controller_first 为 false
+ */
+```
+
+###### Yaf_Route_Rewrite
+
+Yaf_Route_Rewrite 是一个强大的路由协议，他能满足我们绝大部分的路由需求：
+
+例：Yaf_Route_Rewrite
+
+```php
+<?php
+// 创建一个路由协议实例
+$router = new Yaf_Route_Rewrite(
+	'product/:ident',
+    [
+        'controller' => 'products',
+        'action' => 'view',
+    ]
+);
+// 使用路由器转载路由协议
+$router->addRoute('product', $route);
+```
+
+在这个例子中，我们试图匹配 URL 指定的一个单一的产品，就像 http://{hostname}/product/choclolat-bar. 为了实现这点，我们在路由协议中传递了 2个变量到路由协议 Yaf_Route_Rewrite 的构造函数中，第一个变量（'product/:indent'）就是匹配的路径，第二个变量（array）是路由到的动作控制器；路径使用一个特别的表示来告诉路由协议如何匹配到路径中的每一段，这个标识有两种，可以帮助我们创建我们的路由协议，如下所示：
+
+a):
+
+b)*
+
+" : " 指定了一个段，这个段包含一个变量用于传递到我们动作控制器中的变量，我们要设置好事先的变量名，比如在上面我们的变量名就是 ‘ident’，因此如果我们访问 http://{hostname}/product/chocolate-bar，将会创建一个变量名为 ident 且值是 chocolate-bar 的变量名，然后就可以在我们的 Action 中获取到它的值： $this->getRequest()->getParam('ident');
+
+" * "被用于做一个通配符，意思就是在 Url 中它后面的所有段都将作为一个通配数据被存储。例如我们有路径 ‘path/product/:ident/*’ 并且我们访问的 URL 为 http://{hostname}/product/chocolate-bar/test/value1/another/value2, 那么所有的在 ‘chocolate-bar’ 之后的节都将被当作 key-value ‘键值对’，因此会给我们这样的结果：
+
+```php
+ident = chocolate-bar
+test = value1
+another = value2
+```
+
+ 这种行为也就是我们平常默认使用的路由协议的行为，注意 key-value 要成对出现。我们有静态的路由协议部分，这些部分简单地被匹配来满足我们的路由协议，在我们的例子中，静态部分就是 product: 就像现在看到的那样，我们的 Yaf_Route_Rewrite 路由协议提供给我们极大的灵活性来控制我们的路由。
+
+###### Yaf_Route_Regex
+
+到目前为止，我们之前的路由协议都很好地完成了基本的路由操作，我们常用的也是此。然而 Yaf_Route_Regex 会有一些限制，这就是我们为什么要引进正则路由 （Yaf_Route_Regex）的原因，正则路由给予我们 preg 正则的全部功能，当同时也使我们的路由协议变得更加复杂了一些。即使是它们有些复杂，我们还是希望能掌握此路由协议的用法，因此此协议更加灵活。
+
+例：Yaf_Route_Regex
+
+```php
+<?php
+$route = new Yaf_Route_Regex(
+	'product/([a-zA-Z-_0-9]+)',
+    [
+        'controller' => 'products',
+        'action' => 'view',
+    ]
+);
+$router->addRoute('product', $route);
+```
+
+可以看到，我们现在移动我们的正则到我们的 path（构造函数的第一个参数）中来了。跟之前一样，这个路由协议现在应该是匹配一个数字，字母 ，‘-’ 和 ‘_’ 组成的 ident 变量的字符提供给我们，但是 ident 变量在哪呢？
+
+如果我们使用了 Yaf_Route_Refex 这个路由协议，我们可以通过变量 1(one) 来获取其值，即可以在控制器里用 $this->getRequest()->getParam(1) 来获取，其实这里如果看过正则的都知道这就是反向应用中的 \1 . 然而我们会想为什么要定义这么一个麻烦，我们不能记住或弄清每一个数字代表的是什么变量吗？ 为了改变这点，正则路由协议的构造函数提供了 第三个参数 来完成数字到变量名的映射
+
+例：Yaf_Route_Regex
+
+```php
+<?php
+$route = new Yaf_Route_Regex(
+	'product/([a-zA-Z-_0-9]+)',
+    [
+        'controller' => 'products',
+        'action' => 'view'
+    ],
+    [
+        1 => 'ident',   /// 完成数字到字符变量的映射
+    ]
+);
+$router->addRoute('product', $route);
+```
+
+这样，我们就简单地将 变量 1 映射到了 ident 变量名，这样就设置了 ident 变量，同时我们也可以在控制器中获取到它的值。
+
 #### 8_6.自定义路由协议
+
+也会有场景，我们前面提到的 Yaf_Route_Simple, Yaf_Route_Supervar, Yaf_Route_Map, Yaf_Route_Rewrite, Yaf_Route_Regex 都无法满足需求。
+
+我们可以使用自定义的路由协议，方式是实现 
+
+[Yaf_Route_Interface]: http://www.laruence.com/manual/yaf.class.route.html
+
+ 接口即可。
 
 ## 9.在命令行使用Yaf
 

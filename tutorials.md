@@ -963,9 +963,90 @@ $app->getDispatcher()->display(new Yaf_Request_Simple());
 
 #### 10_1.概述
 
+Yaf 实现了一套错误和异常捕获机制，主要对常见的错误处理和异常捕获方法做了一个简单抽象，方便应用组织自己的错误统一处理逻辑。
+
+Yaf 自身出错时候，根据配置可以分别采用抛异常或触发错误的方式来通知错误，在 application.dispatcher.throwException（配置文件，或通过 Yaf_Dispatcher::throwException(true)） 打开的情况下，Yaf 会抛异常，否则会触发错误。
+
+对抛异常和触发错误两种方式，也对应两种 handle 处理错误的方式。
+
 #### 10_2.异常模式
 
+在 application.dispatcher.catchException（配置文件，或通过 Yaf_Dispatcher::catchException(true)）开启的情况下，当 Yaf 遇到未捕获异常的时候，就会把运行权限交给当前模块的 Error Controller 的 Error Action 动作，而异常或作为请求的一个参数，传递给 Error Action.
+
+在 Error Action 中可以通过 $request->getRequest()->getParam("exception") 获取当前发生的异常。
+
+> 注意：也可以通过 $request->getException() 来获取当前发生的异常，而如果 Error Action 定义了一个名为 $exception 的参数的话，也可以直接通过这个参数获取当前发生的异常。
+>
+> 例：Error Controller
+>
+> ```php
+> <?php
+> // 当有未捕获的异常时，控制流会走到这里
+> class ErrorController extends Yaf_Controller_Abstract
+> {
+> 	// 也可以通过 $request->getException() 获取发生的异常
+>     public function errorAction ($exception)
+>     {
+>         assert($exception === $exception->getCode());
+>         $this->getView()->assign("code", $exception->getCode());
+>         $this->getView()->assign("message", $exception->getMessage());
+>     }
+> }
+> ```
+>
+> 有了这样的最终异常处理逻辑，应用就可以在出错的时候直接抛异常，在统一异常处理逻辑中，根据各种不同的异常逻辑，处理错误，记录日志。
+>
+> 一个常用的 Error Action 如下：
+>
+> ```php
+> <?php
+> // 当有未捕获的异常时，则控制流会流到这里
+> class ErrorController extends Yaf_Controller_Abstract
+> {
+>     // 也可以通过 $request->getException()获取发生的异常
+>     public function errorAction ($exception)
+>     {
+>         switch($exception->getCode()) {
+>             case YAF_ERR_LOADFAILED:
+>             case YAF_ERR_LOADFAILED_MODULE:
+>             case YAF_ERR_LOADFAILED_CONTROLLER:
+>             case YAF_ERR_LOADFAILED_ACTION:
+>                 header("Not Found");
+>                 break;
+>             case CUSTOM_ERROR_CODE:
+>                 break;
+>         }
+>     }
+> }
+> ```
+>
+> 或者换种更易读的写法：
+>
+> ```php
+> <?php
+> // 当有未捕获的异常时，则控制流会流到这里
+> class ErrorController extends Yaf_Controller_Abstract
+> {
+>     // 通过 $request->getException() 获取到发生的异常
+>     public function errorAction ()
+>     {
+>         $exception = $this->getRequest()->getException();
+>         try {
+>             throw $exception;
+>         } catch (Yaf_Exception_LoadFailed $e) {
+>             // 加载失败
+>         } catch (Yaf_Exception $e) {
+>             // 其他类型错误
+>         }
+>     }
+> }
+> ```
+>
+> 
+
 #### 10_3.错误模式
+
+// 略
 
 ## 11.内建的类
 

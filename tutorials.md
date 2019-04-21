@@ -112,18 +112,19 @@ class Index_Controller extends Yaf_Request_Abstract {
 
 > （注意：请不要在正式的环境中以 Debug 模式来编译 Yaf，这个做一是有一定性能损耗，二是即使这么做了，但这种做法与 $_POST 这类大变量设计之初的"只读"特性相违背。所以我们在 yaf_Application 的 construct() 里，如果当前 yaf 是以 debug 模式编译i的，会触发一个 E_STRICT 的提示:
 >
->   Strict Standards: you are running ap in debug mode）
+> Strict Standards: you are running ap in debug mode）
 >
-> 例子：以 debug 模式编译yaf
->
-> ```
-> $PHP_BIN/phpize
-> ./configure --enable-ab-debug --with-php-config=$PHP_BIN/php-config
-> make
-> make install
-> ```
->
-> 
+
+例子：以 debug 模式编译yaf
+
+```
+$PHP_BIN/phpize
+./configure --enable-ab-debug --with-php-config=$PHP_BIN/php-config
+make
+make install
+```
+
+
 
 #### 2_2.yaf定义的常量
 
@@ -206,101 +207,101 @@ application
 
 入口文件是所有请求的入口，一般借助于 rewrite 规则，把所有请求都定向到这个如开口文件
 
-> 例：一个经典的入口文件 public / index.php
->
-> ```php
-> <?php
-> define("APP_PATH", realpath(dirname(__FILE__) . '/../'));
-> $app = new Yaf_Application(APP_PATH . "/conf/application.ini");
-> $app->run();
-> ```
->
-> ###### 重写规则
->
-> 除非我们使用的是基于 query string 的路由协议（Yaf_Route_Simple, Yaf_Route_Supervar）, 否则我们就要使用 WebServer 提供的 Rewrite 规则，把所有应用请求重定向到我们定义的入口文件
->
-> 例：Apache Rewrite 规则（httpd.conf中定义，或根目录下 .htaccess 文件中定义）
->
-> ```xml
-> #.htaccess
-> RewriteEngine On
-> RewriteCond %{REQUEST_FILENAME} !-f
-> RewriteRule .* index.php
-> ```
->
-> 例：Nginx Rewrite 规则 （nginx.conf中定义）
->
-> ```json
-> server {
->     listen ****;
->     server_name domain.name;
->     root document_root;
->     index index.php index.html index.htm;
->     
->     if (!-e $request_filename) {
->         rewrite ^/(.*) /index.php/$1 last;
->     }
-> }
-> ```
->
-> ###### 配置文件
->
-> 在 Yaf 中，配置文件支持集成，支持分节，并对PHP常量进行支持，我们不必担心配置文件太大而造成解析性能上的问题，因为 Yaf 会在第一个运行时 的时候就载入配置文件，把格式化后的内容保持在内存中，直到配置文件有变化了，才会再次载入。
->
-> 例：一个简单的配置文件 application / conf / application.ini
->
-> ```
-> [product]
-> ;支持直接写PHP中的已定义常量
-> application.directory=APP_PATH "/application/"
-> ```
->
-> ###### 控制器
->
-> 在 Yaf 中，默认的模块 / 控制器 / 动作，都是以 Index 命名，当然这可以通过 配置文件来修改。
->
-> 对于默认模块，控制器的目录是在 application 目录下的 controllers 目录下，Action 的命名规则是 ”名字 + Action“
->
-> 例：默认控制器 application / controllers / Index.php
->
-> ```php
-> <?php
-> class IndexController extends Yaf_Controller_Abstract {
->     public function indexAction () {
->         $this->getView()->assign("content", "Hello Yaf!");
->     }
-> }
-> ```
->
-> ###### 视图文件
->
-> Yaf 支持简单的视图引擎，并支持用户自定义自己的视图引擎，比如 Smarty 引擎
->
-> 对于默认模块，视图文件的路径是在 application 目录下的 views 目录下，以小写的  action 为名的目录中
->
-> 例：一个默认 Action 的视图 application / views / index / index.phtml
->
-> ```php+HTML
-> <html>
-> <head>
-> 	<title>Hello Yaf</title>        
-> </head>
-> <body>
-> 	<?php echo $content; ?>    
-> </body>    
-> </html>
-> ```
->
-> ###### 运行
->
-> 在浏览器里我们输入域名：
->
-> ```
-> http://{hostname}/application/index.php
-> ```
->
-> 此时如果前面操作无误的话，我们能看到浏览器页面正常显示：Hello Yaf!
->
+例：一个经典的入口文件 public / index.php
+
+```php
+<?php
+define("APP_PATH", realpath(dirname(__FILE__) . '/../'));
+$app = new Yaf_Application(APP_PATH . "/conf/application.ini");
+$app->run();
+```
+
+###### 重写规则
+
+除非我们使用的是基于 query string 的路由协议（Yaf_Route_Simple, Yaf_Route_Supervar）, 否则我们就要使用 WebServer 提供的 Rewrite 规则，把所有应用请求重定向到我们定义的入口文件
+
+例：Apache Rewrite 规则（httpd.conf中定义，或根目录下 .htaccess 文件中定义）
+
+```xml
+#.htaccess
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule .* index.php
+```
+
+例：Nginx Rewrite 规则 （nginx.conf中定义）
+
+```json
+server {
+ listen ****;
+ server_name domain.name;
+ root document_root;
+ index index.php index.html index.htm;
+ 
+ if (!-e $request_filename) {
+     rewrite ^/(.*) /index.php/$1 last;
+ }
+}
+```
+
+###### 配置文件
+
+在 Yaf 中，配置文件支持集成，支持分节，并对PHP常量进行支持，我们不必担心配置文件太大而造成解析性能上的问题，因为 Yaf 会在第一个运行时 的时候就载入配置文件，把格式化后的内容保持在内存中，直到配置文件有变化了，才会再次载入。
+
+例：一个简单的配置文件 application / conf / application.ini
+
+```
+[product]
+;支持直接写PHP中的已定义常量
+application.directory=APP_PATH "/application/"
+```
+
+###### 控制器
+
+在 Yaf 中，默认的模块 / 控制器 / 动作，都是以 Index 命名，当然这可以通过 配置文件来修改。
+
+对于默认模块，控制器的目录是在 application 目录下的 controllers 目录下，Action 的命名规则是 ”名字 + Action“
+
+例：默认控制器 application / controllers / Index.php
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract {
+ public function indexAction () {
+     $this->getView()->assign("content", "Hello Yaf!");
+ }
+}
+```
+
+###### 视图文件
+
+Yaf 支持简单的视图引擎，并支持用户自定义自己的视图引擎，比如 Smarty 引擎
+
+对于默认模块，视图文件的路径是在 application 目录下的 views 目录下，以小写的  action 为名的目录中
+
+例：一个默认 Action 的视图 application / views / index / index.phtml
+
+```php+HTML
+<html>
+<head>
+	<title>Hello Yaf</title>        
+</head>
+<body>
+	<?php echo $content; ?>    
+</body>    
+</html>
+```
+
+###### 运行
+
+在浏览器里我们输入域名：
+
+```
+http://{hostname}/application/index.php
+```
+
+此时如果前面操作无误的话，我们能看到浏览器页面正常显示：Hello Yaf!
+
 > 
 
 #### 3_3.使用代码生成工具
@@ -336,12 +337,10 @@ http://{hostname}/helloworld/application/index.php
 yaf 和用户共用一个配置空间，也就是在 Yaf_Application 初始化时给出的配置文件中的配置。作为区别，Yaf 的配置项均以 ap 为前缀，Yaf 的核心必不可少的配置只有一个。
 
 > （注意：yaf 通过在不同的环境中，选取不同的配置节，再结合配置可继承，来实现 “一套配置，多种环境公用” ，比如：线上 -> 测试 -> 开发）
->
-> | 名称                  | 值类型 | 说明               |
-> | --------------------- | ------ | ------------------ |
-> | application.directory | String | 应用的绝对目录路径 |
 
-
+| 名称                  | 值类型 | 说明               |
+| --------------------- | ------ | ------------------ |
+| application.directory | String | 应用的绝对目录路径 |
 
 #### 4_2.可选的配置项
 
@@ -824,7 +823,11 @@ $router->addRoute('product', $route);
 
 #### 9_1.简介
 
+Yaf 支持在命令行下运行，以此来方便调试。
+
 #### 9_2.使用样例
+
+要是的
 
 #### 9_3.分发请求
 

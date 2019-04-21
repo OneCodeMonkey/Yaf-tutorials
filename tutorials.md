@@ -231,16 +231,16 @@ RewriteRule .* index.php
 
 例：Nginx Rewrite 规则 （nginx.conf中定义）
 
-```json
+```php
 server {
- listen ****;
- server_name domain.name;
- root document_root;
- index index.php index.html index.htm;
+  listen ****;
+  server_name domain.name;
+  root document_root;
+  index index.php index.html index.htm;
  
- if (!-e $request_filename) {
-     rewrite ^/(.*) /index.php/$1 last;
- }
+  if (!-e $request_filename) {
+    rewrite ^/(.*) /index.php/$1 last;
+  }
 }
 ```
 
@@ -827,7 +827,7 @@ Yaf 支持在命令行下运行，以此来方便调试。
 
 #### 9_2.使用样例
 
-要是的
+要使得 Yaf在命令行下运行，有两种方式，
 
 #### 9_3.分发请求
 

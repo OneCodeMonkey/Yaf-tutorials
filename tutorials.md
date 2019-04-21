@@ -827,9 +827,137 @@ Yaf 支持在命令行下运行，以此来方便调试。
 
 #### 9_2.使用样例
 
-要使得 Yaf在命令行下运行，有两种方式，
+要使得 Yaf在命令行下运行，有两种方式，第一种方式专为用 Yaf 开发 Crontab 等任务脚本而设计，在这种方式下，对 Yaf 唯一的要求是能自动加载所需要的 Module 和类库。所以可以简单地通过 Yaf_Application::execute 来实现。
+
+第二种方式是为了在命令行下模拟请求而设计，运行和web请求一样的流程，从而可以用在命令行下测试我们的 Yaf 应用。对于此种方式，唯一的关键点是请求体，默认的请求体是由 Yaf_Application 实例化并交给 Yaf_Dispatcher 的。而在命令行下，Yaf_Application 并不能正确地实例化一个命令行请求，所以需要变更一下，具体点是请求体需要手动实例化。
+
+例：实例化一个 Yaf_Request_Simple
+
+```php
+<?php
+$request = new Yaf_Request_Simple();
+print_r($request);
+```
+
+如上面的例子，Yaf_Request_Simple 的构造函数可以不接受任何参数，在这种情况下 Yaf_Request_Simple 会在命令行参数中寻找一个字符串参数。如果找到了则把请求的 request_uri 置为这个字符串。
+
+> 注意：Yaf_Request_Simple 是可以接受 5个参数的，具体可见 
+>
+> [Yaf_Request_Simple]: http://www.laruence.com/manual/yaf.class.request.html#yaf.class.request.simple
+
+现在试着运行上面的代码：
+
+```shell
+$ php request.php 
+     
+    
+输出:
+                    
+     Yaf_Request_Simple Object
+     (
+     [module] => 
+     [controller] => 
+     [action] => 
+     [method] => CLI
+     [params:protected] => Array
+     (
+     )
+
+     [language:protected] => 
+     [_base_uri:protected] => 
+     [uri:protected] => 
+     [dispatched:protected] => 
+     [routed:protected] => 
+     )
+```
+
+现在我们变更下运行方式：
+
+```shell
+$ php request.php  "request_uir=/index/hello"
+     
+    
+输出:
+                    
+     Yaf_Request_Simple Object
+     (
+     [module] => 
+     [controller] => 
+     [action] => 
+     [method] => CLI
+     [params:protected] => Array
+     (
+     )
+
+     [language:protected] => 
+     [_base_uri:protected] => 
+     [uri:protected] => index/hello  //注意这里
+     [dispatched:protected] => 
+     [routed:protected] => 
+     )
+```
+
+可以看出差别。
+
+当然我们也可以完全指定 Yaf_Request_Simple::__construct 的5个参数
+
+例：带参数实例化一个 Yaf_Request_Simple
+
+```shell
+<?php
+     $request = new Yaf_Request_Simple("CLI", "Index", "Controller", "Hello", array("para" => 2));
+     print_r($requst);
+     
+    
+运行输出:
+                    
+     $ php request.php 
+     Yaf_Request_Simple Object
+     (
+     [module] => Index
+     [controller] => Controller
+     [action] => Hello
+     [method] => CLI
+     [params:protected] => Array
+     (
+     [para] => 2
+     )
+
+     [language:protected] => 
+     [_base_uri:protected] => 
+     [uri:protected] => 
+     [dispatched:protected] => 
+     [routed:protected] => 1    //注意这里
+     )
+```
+
+可以看到一个比较特别的点，routed 属性变为了 true，这代表如果我们手动指定了构造函数的参数，那么这个请求不会再经过 路由，而是直接由路由来完成状态。
 
 #### 9_3.分发请求
+
+现在请求已经改造完成了，那么接下来就比较简单了，我们只需要把我们传统的入口文件
+
+```php
+<?php
+$app = new Yaf_Application("conf.ini");
+$app->bootstrap()->run();
+```
+
+改为：
+
+```php
+<?php
+$app = new Yaf_Application("conf.ini");
+$app->getDispatcher()->display(new Yaf_Request_Simple());
+```
+
+这样我们就可以在命令行运行 Yaf 了。
+
+参见：
+
+[Yaf_Request_Simple]: http://www.laruence.com/manual/yaf.class.request.html#yaf.class.request.simple
+
+
 
 ## 10.异常和错误
 

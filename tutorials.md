@@ -1052,6 +1052,44 @@ Yaf 自身出错时候，根据配置可以分别采用抛异常或触发错误�
 
 #### 11_1.Yaf_Application
 
+###### 简介
+
+Yaf_Application 代表一个产品/项目，是Yaf运行的主导者，真正执行的主体。他负责接收请求，协调路由，分发，执行，输出。
+
+在PHP5.3以后，打开了 Yaf.use_namespace 的情况下，也可以使用 Yaf\Application.
+
+```php
+final Yaf_Application
+{
+    protected Yaf_Config _config;
+    protected Yaf_Dispatcher _dispatcher;
+    protected static Yaf_Application _app;
+    protected boolean _run = FALSE;
+    protected string _environ;
+    protected string _modules;
+    public void __construct (mixed $config, string $section = ap.environ);
+    public Yaf_Application bootstrap (void);
+    public Yaf_Response_Abstract run (void);
+    public Yaf_Dispatcher getDispatcher (void);
+    public Yaf_Config_Abstract getConfig (void);
+    public string envirn (void);
+    public string geModules (void);
+    public static Yaf_Application app (void);
+    public mixed execute (callback $function, mixed $parameter = NULL, mixed $... = NULL);
+}
+```
+
+###### 属性说明
+
+| 属性        | 说明                                                         |
+| ----------- | ------------------------------------------------------------ |
+| _app        | Yaf_Application 通过特殊的方式实现了单例模式，此属性保存当前实例 |
+| _config     | 全局配置实例                                                 |
+| _dispatcher | Yaf_Dispatcher 实例                                          |
+| _modules    | 存在的模块名，从配置文件中 ap.modules 读取                   |
+| _environ    | 当前的环境名，也就是Yaf_Application在读取配置的时候，获取的配置节名字 |
+| _run        | 布尔值，指明当前的Yaf_Application是否已经运行                |
+
 #### 11_2.Yaf_Bootstrap_Abstract
 
 #### 11_3.Yaf_Loader

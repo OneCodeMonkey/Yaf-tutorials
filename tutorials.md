@@ -1631,6 +1631,664 @@ Yaf_Loader::getInstance()->clearLocalNamespace();
 
 #### 11_4.Yaf_Dispatcher
 
+###### 简介
+
+Yaf_Dispatcher 实现了MVC分发中的 C 分发，它由 Yaf_Application 负责初始化，然后由 Yaf_Application::run() 启动，然后 Yaf_Dispatcher 协调路由来的请求，并分发和执行发现的动作，并收集动作产生的响应，输出响应给请求者，并在整个过程完成以后返回响应。
+
+在PHP5.3 以后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Dispatcher.
+
+```php
+final Yaf_Dispatcher {
+    protected static Yaf_Dispatcher _instance;
+    protected Yaf_Router_Interface _router;
+    protected Yaf_View_Abstract _view;
+    protected Yaf_Request_Abstract _request;
+    protected array _plugins;
+    protected boolean _render;
+    protected boolean _return_response = FALSE;
+    protected boolean _instantly_flush = FALSE;
+    protected string _default_module;
+    protected string _default_controller;
+    protected string _default_action;
+    public static Yaf_Dispatcher getInstance();
+    public Yaf_Dispatcher disableView();
+    public Yaf_Dispatcher enableView();
+    public boolean autoRender (bool $flag);
+    public Yaf_Dispatcher returnResponse (boolean $flag);
+    public Yaf_Dispatcher flushInstantly (boolean $flag);
+    public Yaf_Dispatcher setErrorHandler (mixed $callback, int $error_type = E_ALL | E_STRICT);
+    public Yaf_Application getApplication();
+    public Yaf_Request_Abstract getRequest();
+    public Yaf_Router_Interface getRouter();
+    public Yaf_Dispatcher registerPlugin (Yaf_Plugin_Abstract $plugin);
+    public Boolean setAppDirectory (string $directory);
+    public Yaf_Dispatcher setRequest (Yaf_Request_Abstract $request);
+    public Yaf_View_Interface initView();
+    public Yaf_Dispatcher setView (Yaf_View_Interface $view);
+    public Yaf_Dispatcher setDefaultModule (string $default_module_name);
+    public Yaf_Dispatcher setDefaultController (string $default_controller_name);
+    public Yaf_Dispatcher setDefaultAction (string $default_action_name);
+    public Yaf_Dispatcher throwException (boolean $switch = FALSE);
+    public Yaf_Dispatcher catchException (boolean $switch = FALSE);
+    public Yaf_Response_Abstract dispatch (Yaf_Request_Abstract $request);
+}
+```
+
+###### 属性说明
+
+_instance: Yaf_Dispatcher 实现了单例模式，此属性保存当前实例。
+
+_request: 当前请求。
+
+_router: 路由器。
+
+_view: 当前的视图引擎，可通过 Yaf_Dispatcher::setView 来替换视图引擎为自定义的视图引擎（比如 Smarty / Firekylin 等常见引擎）
+
+_plugins: 已经注册的插件，插件一经注册就不能更改和删除了。
+
+_render: 标示着是否在动作执行完成后，调用视图引擎的 render 方法来产生响应。可通过 Yaf_Dispatcher::returnResponse 来切换开关状态。
+
+_return_response: 标示着是否在产生响应以后，不自动输出给客户端，而是返回给调用者。可通过 Yaf_Dispatcher::returnResponse 来切换开关状态
+
+_instantly_flush: 标示着是否在有输出的时候，直接响应给客户端，而不写入 Yaf_Response_Abstract 对象。
+
+> 注意：如果此属性为 TRUE，那么将 忽略 Yaf_Dispatcher::$_return_response
+
+_default_module: 默认的模块名，在路由的时候，如果没有指明模块，则会使用这个值，也可以通过配置文件中的 ap.dispatcher.defaultModule 来指定。
+
+_default_controller: 默认的控制器名，在路由的时候，如果没有指明控制器，则会使用这个值，也可以通过配置文件里的 ap.dispatcher.defaultController 来指定。
+
+_default_action: 默认的动作名。在路由的时候如果没有指明动作，则会使用这个值，看可以通过配置文件中的 ap.dispatcher.defaultAction 来指定。
+
+###### Yaf_Dispatcher::getInstance()
+
+```php
+public static Yaf_Dispatcher Yaf_Dispatcher::getInstance();
+```
+
+获取当前的 Yaf_Dispatcher 实例
+
+参数：void
+
+返回值：Yaf_Dispatcher
+
+例：Yaf_Dispatcher::getInstance
+
+```php
+<?php
+$dispatcher = Yaf_Dispatcher::getInstance();    
+```
+
+###### Yaf_Dispatcher::disableView
+
+```php
+public boolean Yaf_Dispatcher::disableView();
+```
+
+关闭自动 Render，默认是开启的，在动作执行完成以后，Yaf 会自动 render 以动作名命令的视图模板文件
+
+参数：void
+
+返回值：成功返回 Yaf_Dispatcher, 失败返回 FALSE
+
+例：Yaf_Dispatcher::disableView
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    // controller 的init方法会首先被调用
+    public function init() {
+        // 如果是 ajax 请求，则关闭 HTML 输出
+        if ($this->getRequest()->isXmlHttpRequest()) {
+            Yaf_Dispatcher::getInstance()->disableView();
+        }
+    }
+}
+```
+
+###### Yaf_Dispatcher::enableView
+
+```php
+public boolean Yaf_Dispatcher::enableView();
+```
+
+开启自动 Render. 默认是开启的，在动作执行完成以后，Yaf 会自动 render 以动作名命名的视图模板文件
+
+参数：void
+
+返回值：成功返回 Yaf_Dispatcher, 失败返回 FALSE.
+
+例：Yaf_Dispatcher::enableView
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    // Controller 的init方法会被自动首先调用
+    public function init() {
+        // 如果不是ajax请求，则开启 HTML 输出
+        if (!$this->getRequest()->isXmlHttpRequest()) {
+            Yaf_Dispatcher::getInstance()->enableView();
+        }
+    }
+}
+```
+
+###### Yaf_Dispatcher::autoRender
+
+```php
+public boolean Yaf_Dispatcher::autoRender(boolean $switch);
+```
+
+开启/关闭自动渲染功能。在开启的情况下（默认是开启的），等动作执行完以后，Yaf 会自动调用 View 引擎去渲染该 Action 对应的视图模板。
+
+参数：$switch: 开启状态
+
+返回值：成功返回 Yaf_Dispatcher, 失败返回 FALSE
+
+例：Yaf_Dispatcher::autoRender
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init() {
+        if($this->getRequest()->isXmlHttpRequest()) {
+            // 如果是ajax请求，则关闭自动渲染（需要由我们手动返回 JSON 响应）。
+            Yaf_Dispatcher::getInstance()->autoRender(FALSE);
+        }
+    }
+}
+```
+
+###### Yaf_Dispatcher::returnResponse
+
+```php
+public void Yaf_Dispatcher::returnResponse(boolean $switch);
+```
+
+是否返回Response 对象，如果启用则 Response 对象在分发完成以后不会自动输出给请求端，而是交给程序员自己控制输出。
+
+参数：$switch: 开启状态
+
+返回值：成功返回 Yaf_Dispatcher，失败返回 FALSE
+
+例：Yaf_Dispatcher::returnResponse
+
+```php
+<?php
+$application = new Yaf_Application("config.ini");
+// 关闭自动响应，需要后续主动进行输出
+$response = $application->getDispatcher()
+    ->returnResponse(TRUE)
+    ->getApplication()
+    ->run();
+// 输出响应
+$response->response();
+```
+
+###### Yaf_Dispatcher::flushInstantly
+
+```php
+public void Yaf_Dispatcher::flushInstantly(boolean $switch);
+```
+
+切换自动响应，在 Yaf_Dispatcher::enableView() 的情况下，会使得 Yaf_Dispatcher 调用 Yaf_Controller_Abstract::display 方法，直接输出响应给请求端。
+
+参数：$switch:  开启状态
+
+返回值：成功返回 Yaf_Dispatcher，失败返回 FALSE
+
+例： Yaf_Dispatcher::flushInstantly
+
+```php
+<?php
+$application = new Yaf_Application("config.ini");
+// 立即输出响应
+Yaf_Dispatcher::getInstance()->flushInstantly(TRUE);
+// 此时会调用 Yaf_Controller_Abstract::display 方法
+$application->run();
+```
+
+###### Yaf_Dispatcher::setErrorHandler
+
+```php
+public boolean Yaf_Dispatcher::setErrorHandler(mixed $callback, int $error_code = E_ALL | E_STRICT);
+```
+
+设置错误处理函数。一般在 application.throwException 关闭的情况下，Yaf会在出错的时候触发错误，这个时候如果设置了错误处理函数，则把控制权交给错误处理函数处理。
+
+参数：
+
+$callback: 错误处理函数，这个函数需要最少接受两个参数：错误码($error_code)，错误信息($error_message), 可选的还有三个参数：错误文件($err_file), 错误行($err_line)和错误上下文($err_context)
+
+$error_code: 要捕获的错误类型
+
+返回值：成功返回 Yaf_Dispatcher, 失败返回 FALSE
+
+例：Yaf_Dispatcher::setErrorHandler
+
+```php
+<?php
+// 一般可放在 Bootstrap 中定义错误处理函数
+function myErrorHandler($errno, $errstr, $errfile, $errline) {
+    switch ($errno) {
+        case YAF_ERR_NOTFOUND_CONTROLLER：
+        case YAF_ERR_NOTFOUND_MODULE:
+        case YAF_ERR_NOTFOUND_ACTION:
+            header("Not Found");
+            break;
+        default:
+            echo "Unknown error type:[$errno] $errstr<br/>\n";
+            break;
+    }
+    return true;
+}
+Yaf_Dispatcher::getInstance()->setErrorHandler("myErrorHandler");
+```
+
+###### Yaf_Dispatcher::getApplication
+
+```php
+public Yaf_Application Yaf_Dispatcher::getApplication();
+```
+
+获取当前的 Yaf_Application 的实例
+
+参数：void
+
+返回值：Yaf_Application
+
+例：Yaf_Dispatcher::getApplication
+
+```php
+<?php
+$application = Yaf_Dispatcher::getInstance()->getApplication();
+// 不过还是推荐这种用法比较简便
+$application = Application::app();
+```
+
+###### Yaf_Dispatcher::getRouter
+
+```php
+public Yaf_Router Yaf_Dispatcher::getRouter();
+```
+
+获取路由器
+
+参数：
+
+返回值：Yaf_Router
+
+例：Yaf_Dispatcher::getRouter
+
+```php
+<?php
+$router = Yaf_Dispatcher::getInstance()->getRouter();    
+```
+
+###### Yaf_Dispatcher::getRequest
+
+```php
+public Yaf_Request_Abstract Yaf_Dispatch::getRequest();
+```
+
+获取当前的请求实例
+
+参数：void
+
+返回值：Yaf_Request_Abstract
+
+例：Yaf_Dispatcher::getRequest
+
+```php
+<?php
+$request = Yaf_Dispatcher::getInstance()->getRequest();    
+```
+
+###### Yaf_Dispatcher::registerPlugin
+
+```php
+public boolean Yaf_Dispatcher::registerPlugin(Yaf_Plugin_Abstract $plugin);
+```
+
+注册一个插件
+
+参数：$plugin: 一个 Yaf_Plugin_Abstract 派生类的实例。
+
+返回值：成功返回 Yaf_Dispatcher, 失败返回FALSE
+
+例：Yaf_Dispatcher::registerPlugin
+
+```php
+<?php
+/**
+ * 所有在Bootstrap类中，以 _init 开头的方法都会被 Yaf 调用。
+ * 这些方法都接受一个参数：Yaf_Dispatcher $dispatcher
+ * 调用的次序和声明的次序相同
+ */
+class Bootstrap extends Yaf_Bootstrap_Abstract
+{
+    // 注册一个插件，插件的目录 application_directory/plugins
+    public function _initPllugin(Yaf_Dispatcher $dispatcher) {
+    	$user = new UserPlugin();
+        $dispatcher->registerPlugin($user);
+    }
+}
+// 插件类定义
+class UserPlugin extends Yaf_Plugin_Abstract
+{
+    public function routerStartup(Yaf_Request_Abstract $request, Yaf_Response_Abstract $response) {
+        echo "Plugin routerStartup called <br/>\n";
+    }
+    public function routerShutdown(Yaf_Request_Abstract $request, Yaf_Response_Abstract $response) {
+        echo "Plugin routerShutdown called <br/>\n";
+    }
+    public function dispatchLoopStartup(Yaf_Request_Abstract $request, Yaf_Response_Abstract $response) {
+        echo "Plugin DispatchLoopStartup called <br/>\n";
+    }
+    public function preDispatch(Yaf_Request_Abstract $request, Yaf_Response_Abstract $response) {
+        echo "Plugin PreDispatch called <br/>\n";
+    }
+    public function postDispatch(Yaf_Request_Abstract $request, Yaf_Response_Abstract $response) {
+        echo "Plugin postDispatch called <br/>\n";
+    }
+    public function dispatchLoopShutdown(Yaf_Request_Abstract $request, Yaf_Response_Abstract $response) {
+        echo "Plugin DispatchLoopShutdown called <br/>\n";
+    }
+}
+```
+
+###### Yaf_Dispatcher::setAppDirectory
+
+```php
+boolean Yaf_Dispatcher::setAppDirectory(string $directory);
+```
+
+改变APPLICATION_PATH，在此之后将从新的APPLICATION_PATH 下加载控制器 / 视图，但注意这不会改变自动加载的路径。
+
+参数：$directory: 绝对路径的APPLICATION_PATH
+
+返回值：成功则返回Yaf_Dispatcher, 失败则返回FALSE
+
+例：Yaf_Dispatcher::setAppDirectory
+
+```php
+<?php
+$config = array(
+	"ap" => array(
+    	"directory" => "/usr/local/www/ap",
+    ),
+);
+$app = new Yaf_Application($config);
+$app->getDispatcher()->setAppDirectory("/usr/local/new/application")->getApplication()->run();
+```
+
+###### Yaf_Dispatch::setRequest
+
+```php
+public boolean Yaf_Dispatcher::setRequest(Yaf_Request_Abstract $request);
+```
+
+设置请求对象
+
+参数：$request: 一个Yaf_Request_Abstract 实例
+
+$error_code: 要捕获的错误类型
+
+返回值：成功返回 Yaf_Dispatcher, 失败则返回 FALSE
+
+例：Yaf_Dispatcher::setRequeset
+
+```php
+<?php
+$request = new Yaf_Request_Simple("Index", "Index", "index");
+Yaf_Dispatcher::getInstance()->setRequest($request);
+```
+
+###### Yaf_Dispatcher::initView
+
+```php
+public Yaf_View_Interface Yaf_Dispatcher::initView(string $tpl_dir);
+```
+
+初始化视图引擎，因为 Yaf 采用延迟实例化视图引擎的策略，所以只有在使用前调用此方法，视图引擎才会被实例化。
+
+> 注意：如果我们需要自定义视图引擎，那么需要在调用 Yaf_Dispatcher::setView 自定义视图引擎之后才可以调用此方法，不然将得不到正确的视图引擎，因为默认的此方法会实例化一个 Yaf_View_Simple 视图引擎
+
+参数：$tpl_dir:  视图的模板目录的绝对路径
+
+返回值：Yaf_View_Interface 实例
+
+例：Yaf_Dispatcher::initView
+
+```php
+<?php
+class Bootstrap extends Yaf_Bootstrap_Abstract {
+    public function _initViewParameter(Yaf_Dispatcher $dispatcher) {
+        $dispatcher->initView(APPLICATION_PATH . "/views/")->assign("webroot", WEBROOT);
+    }
+}
+```
+
+###### Yaf_Dispatcher::setView
+
+```php
+public boolean Yaf_Dispatcher::setView(Yaf_View_Interface $request);
+```
+
+设置视图模板引擎
+
+参数：$view: 一个实现了 Yaf_View_Interface 的视图模板引擎实例
+
+返回值：成功则返回 Yaf_Dispatcher, 失败则返回 FALSE
+
+例：Yaf_Dispatcher::setView
+
+```php
+<?php
+/**
+ * 所有在 Bootstrap 类中，以 _init 开头的方法，都会被 Yaf 调用
+ * 这些方法，都接受一个参数：Yaf_Dispatcher $dispatcher
+ * 调用的次序和声明的顺序相同
+ */
+class Bootstrap extends Yaf_Bootstrap_Abstract
+{
+    // 自定义视图引擎
+    public function _initSmarty(Yaf_Dispatcher $dispatcher) {
+        $smarty = new Smarty_Adapter(null, Yaf_Registry::get("config")->get("smarty"));
+        Yaf_Dispatcher::getInstance()->setView($smarty);
+    }
+}
+/**
+ * 视图引擎定义
+ * Smarty/Adapter.php
+ */
+class Smarty_Adapter implements Yaf_View_Interface
+{
+    /**
+     * Smarty object
+     * @var Smarty
+     */
+    public $_smarty;
+    /**
+     * Constructor
+     * @param string $tmplPath
+     * @param array @extraParams
+     * @return void
+     */
+    public function __construct($tmplPath = null, $extraParams = array()) {
+        require "Smarty.class.php";
+        $this->_smarty = new Smarty;
+        if (null !== $tmplPath) {
+            $this->setScriptPath($tmplPath);
+        }
+        foreach ($extraParams as $key => $value) {
+            $this->_smarty->$key = $value;
+        }
+    }
+    
+    /**
+     * Assign variables to the template
+     * Allow setting a specific key to the specified value, OR passing an array of key=>value pairs to set an masse.
+     * @see __set()
+     * @param string|array $spec  The assignment strategy to use(key or array of key => value pairs)
+     * @param mixed $value (Optional) If assigning a named variable, use this as the value.
+     * @return void
+     */
+    public function assign($spec, $value = null) {
+        if (is_array($spec)) {
+            $this->_smarty->assign($spec);
+            return;
+        }
+        $this->_smarty->assign($spec, $value);
+    }
+    
+    /**
+     * Processes a template and returns the output.
+     * @param string $name  The template to process.
+     * @return string   The output.
+     */
+    public function render($name) {
+        return $this->_smarty->fetch($name);
+    }
+}
+```
+
+###### Yaf_Dispatcher::setDefaultController
+
+```php
+public boolean Yaf_Dispatcher::setDefaultController(string $default_controller_name);
+```
+
+设置路由的默认控制器，如果在路由结果中不包含控制器信息，则会使用此默认控制器作为路由控制器结果
+
+参数：$default_controller_name: 默认控制器名，请注意需要首字母大写
+
+返回值：成功返回 Yaf_Dispatcher, 失败返回FALSE
+
+例：Yaf_Dispatcher::setDefaultController
+
+```php
+<?php
+class Bootstrap extends Yaf_Bootstrap_Abstract
+{
+    public function _initDefaultName(Yaf_Dispatcher $dispatcher) {
+        // 这个仅是为了举例，本身 Yaf 默认的是Index
+        $dispatcher->setDefaultModule("Index")->setDefaultController("Index")->setDefaultAction("index");
+    }
+}
+```
+
+###### Yaf_Dispatcher::setDefaultModule
+
+```php
+public boolean Yaf_Dispatcher::setDefaultModule(string $default_module_name);
+```
+
+设置路由的默认模块，如果在路由结果中不包含模块信息，则会使用此默认模块作为路由结果。
+
+参数：$default_module_name:  默认模块名，注意首字母需要大写
+
+返回值：成功则返回 Yaf_Dispatcher, 失败返回 FALSE
+
+例：Yaf_Dispatcher::setDefaultModule
+
+```php
+<?php
+class Bootstrap extends Yaf_Bootstrap_Abstract
+{
+    public function _initDefaultName(Yaf_Dispatcher $dispatcher) {
+        // 这里仅是举例，本身 Yaf 默认的就是 Index
+        $dispatcher->setDefaultModule("Index")->setDefaultController("Index")->setDefaultAction("index");
+    }
+}
+```
+
+###### Yaf_Dispatcher::setDefaultAction
+
+```php
+public boolean Yaf_Dispatcher::setDefaultAction(string $default_module_name)；
+```
+
+设置路由的默认动作，如果在路由结果中不包含动作信息，则会使用此默认动作作为路由动作结果。
+
+参数：$default_module_name:  默认动作名，请注意需要全部小写
+
+返回值：成功则返回 Yaf_Dispatcher, 失败返回 FALSE
+
+例：Yaf_Dispatcher::setDefaultAction
+
+```php
+<?php
+class Bootstrap extends Yaf_Bootstrap_Abstract
+{
+    public function _initDefaultName(Yaf_Dispatcher $dispatcher)
+    {
+        $dispatcher->setDefaultController("Index")->setDefaultAction("index");
+    }
+}
+```
+
+###### Yaf_Dispatcher::throwException
+
+```php
+public boolean Yaf_Dispatcher::throwException(boolean $switch);
+```
+
+切换在 Yaf 出错的时候抛出异常，还是直接触发异常。
+
+当然也可以在配置文件中使用 ap.dispatcher.throwException = $switch 达到同样的效果，默认的是开启状态。
+
+参数：$switch:  如果为 TRUE，则 Yaf 在出错的时候采用抛出异常的方式。如果为 FALSE, 在 Yaf 在出错的时候采用 直接触发异常的方式。
+
+返回值：成功返回 Yaf_Dispatcher, 失败返回 FALSE
+
+例：Yaf_Dispatcher::throwException
+
+```php
+<?php
+$app = new Yaf_Application("conf.ini");
+// 关闭抛出异常
+Yaf_Dispatcher::getInstance()->throwException(FALSE);
+```
+
+###### Yaf_Dispatcher::catchException
+
+```php
+public boolean Yaf_Dispatcher::catchException(boolean $switch);
+```
+
+在 ap.dispatcher.throwException 开启的状态下，是否启用默认捕获异常机制
+
+当然也可以在配置文件中使用 ap.dispatcher.catchException = $switch 达到同样效果，默认是开启状态。
+
+参数：$switch:  如果为 TRUE, 则在由未捕获异常时，Yaf 会交给 Error Controller的Error Action 处理。
+
+返回值：成功返回 Yaf_Dispatcher, 失败返回 FALSE.
+
+例：Yaf_Dispatcher::catchException 
+
+```php
+<?php
+$app = new Yaf_Application("conf.ini");
+// 开启捕获异常
+Yaf_Dispatcher::getInstance()->catchException(TRUE);
+```
+
+###### Yaf_Dispatcher::dispatch
+
+```php
+public boolean Yaf_Dispatch::dispatch(Yaf_Request_Abstract $request);
+```
+
+开始处理流程，一般的不需要用户调用此方法，Yaf_Application::run 会自动调用此方法。
+
+参数：$request: 一个 Yaf_Request_Abstract 实例
+
+返回值：成功返回一个 Yaf_Response_Abstract 实例，失败则返回 FALSE, 错误则会抛出异常。
+
 #### 11_5.Yaf_Plugin_Abstract
 
 #### 11_6.Yaf_Registry

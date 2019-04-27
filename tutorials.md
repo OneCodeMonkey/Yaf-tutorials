@@ -1429,6 +1429,206 @@ $response = $application->bootstrap()->run();
 
 #### 11_3.Yaf_Loader
 
+###### 简介
+
+Yaf_Loader 类为 Yaf 提供了自动加载功能，它根据类名中包含的路径信息实现类的定位和自动加载。
+
+Yaf_Loader 也提供了对传统的 require_once 的替代方案，相比传统的 require_once, 因为舍弃了对 required 的支持，所以性能上略微有一丁点优势。
+
+在 PHP5.3 之后，打开 Yaf.use_namespace 的情况下，也可以使用 Yaf\Loader.
+
+```php
+final Yaf_Loader {
+    protected static Yaf_Loader _instance;
+    protected string _library_directory;
+    protected string _global_library_directory;
+    protected string _local_ns;
+    public static Yaf_Loader getInstance (string $local_library_directory = NULL, string $global_library_directory = NULL);
+    public Yaf_Loader registerLocalNamespace (mixed $namespace);
+    public boolean getLocalNamespace ();
+    public boolean clearLocalNamespace ();
+    public boolean isLocalName (string $class_name);
+    public static boolean import (string $file_name);
+    public boolean autoload (string $class_name);
+}
+```
+
+###### 属性说明
+
+_instance: Yaf_Loader 实现了单例模式，一般的它由 Yaf_Application 负责初始化，此属性保存当前实例。
+
+_library_directory: 本地（自身）类加载路径，一般的，属性的值来自配置文件中的 ap.library
+
+_global_library_directory: 全局类加载路径，一般的，属性的值来自 php.ini 中的 ap.library
+
+_local_ns: 本地类的类名前缀，此属性通过 Yaf_Loader::registerLocalNamespace 来添加新的值。
+
+###### Yaf_Loader::getInstance
+
+```php
+public static Yaf_Loader::getInstance (string $local_library_directroy = NULL, string $global_library_directory = NULL);
+```
+
+获取当前的 Yaf_Loader 实例
+
+参数：
+
+$local_library_directory: 本地（自身）类库目录，如果留空，则返回已经实例化过的 Yaf_Loader 实例
+
+注意：Yaf_Loader 是单例模式，所以即使第二次以不同的参数实例化一个 Yaf_Loader ,得到的仍然是一个已经实例化的第一个实例。
+
+$global_library_directory: 全局类库目录，如果留空则会认为和 $local_library_directory 相同。
+
+返回值：Yaf_Loader
+
+例：Yaf_Loader::getInstance()
+
+```php
+<?php
+$loader = Yaf_Loader::getInstance();    
+```
+
+###### Yaf_Loader::import
+
+```php
+public static boolean Yaf_Loader::import (string $filename);
+```
+
+导入一个 PHP 文件，因为 Yaf_Loader::import 只是专注于一次包含，所以要比传统的 require_once 性能好一点。
+
+参数：
+
+$file_name: 要载入的文件路径，可以为绝对路径和相对路径。如果是相对路径，则会以应用的本地类目录（ap.library）为基目录。
+
+返回值：
+
+成功返回 TRUE，失败返回 FALSE.
+
+例: Yaf_Loader::import()
+
+```php
+<?php
+// 绝对路径
+Yaf_Loader::import("/usr/local/foo.php");
+// 相对路径，会在 APPLICATION_PATH . "/library"下加载
+Yaf_Loader::import("plugins/User.php");
+```
+
+###### Yaf_Loader::autoload
+
+```php
+public static boolean Yaf_Loader::autoload (string $class_name);
+```
+
+载入一个类，这个方法被 Yaf 用作自动加载类的方法， 当然也可以手动调用。
+
+参数：$class_name: 要载入的类名，类名必须包含路径信息，也就是下划线分隔的路径信息和类名。载入的过程中，首先会判断这个类名是否是本地类，如果是本地类，则使用本地类类库目录。否则使用全局类目录。然后判断 yaf.lowcase_path 是否开启，如果开启，则会把类名中的路径部分全部小写，然后加载执行。
+
+```/** yaf.lowcase_path = 0 */  Foo_Bar_Dummy表示这个类存在于类库目录下的 Foo/Bar/Dummy.php```
+
+```/** yaf.lowcase_path = 1 */  Foo_Bar_Dummy表示这个类存在于类库目录下的 foo/bar/Dummy.php```
+
+> 注意：在 php.ini 中的 yaf.lowcase_path 开启的情况下，路径信息中的目录部分都会被转换为小写。
+
+返回值：成功返回true
+
+> 注意：在 php.ini 中的 yaf.use_sql_autoload 关闭的情况下，即使类没有找到，Yaf_Loader::autoload 也会返回 TRUE， 剥夺其后面的自动加载函数的执行权。
+
+例：Yaf_Loader::autoload
+
+```php
+<?php
+Yaf_Loader::autoload("Baidu_ST_Dummy_Bar");
+```
+
+###### Yaf_Loader::registerLocalNamespace
+
+```php
+public Yaf_Loader Yaf_Loader::registerLocalNamespace (mixed $local_name_prefix);
+```
+
+注册本地类前缀，对于以这些前缀开头的本地类，都从本地类库中加载。
+
+参数：$local_name_prefix: 字符串或是数组格式的类名前缀。不包含前缀后面的下划线。
+
+返回值: Yaf_Loader
+
+例： Yaf_Loader::registerLocalNamespace
+
+```php
+<?php
+Yaf_Loader::getInstance()->registerLocalNamespace("Foo");
+Yaf_Loader::getInstance()->registerLocalNamespace(["Foo", "Bar"]);
+```
+
+###### Yaf_Loader::isLocalName
+
+```php
+public boolean Yaf_Loader::isLocalName(string $class_name);
+```
+
+判断一个类是否是本地类。
+
+参数：$class_name: 字符串的类名。本方法会根据下划线分隔截取出类名的第一部分，然后在 Yaf_Loader 的 _local_ns 中判断是否存在，从而确定结果。
+
+返回值：boolean
+
+例：Yaf_Loader::isLocalName
+
+```php
+<?php
+Yaf_Loader::getInstance()->registerLocalNamespace("Foo");
+Yaf_Loader::getInstance()->isLocalName("Foo_2"); // TRUE
+Yaf_Loader::getInstance()->isLocalName("Foo2");  // FALSE
+```
+
+###### Yaf_Loader::getLocalNamespace
+
+```php
+public array Yaf_Loader::getLocalNamespace(void);
+```
+
+获取当前已经注册的本地类前缀
+
+参数：void
+
+返回值：成功返回字符串
+
+例：Yaf_Loader::getLocalNamespace 的例子
+
+```php
+<?php
+
+Yaf_Loader::getInstance()->registerLocalNamespace(["Foo", "Bar"]);
+
+print(Yaf_Loader::getInstance()->getLocalNamespace());
+
+输出：
+
+:Foo:Bar:
+```
+
+###### Yaf_Loader::clearLocalNamespace
+
+```php
+public boolean Yaf_Loader::clearLocalNamespace();
+```
+
+清除已注册的本地类前缀
+
+参数：void
+
+返回值：成功返回 TRUE，失败返回 FALSE
+
+例：Yaf_Loader::clearLocalNamespace
+
+```php
+<?php
+Yaf_Loader::getInstance()->clearLocalNamespace();    
+```
+
+
+
 #### 11_4.Yaf_Dispatcher
 
 #### 11_5.Yaf_Plugin_Abstract

@@ -1090,6 +1090,284 @@ final Yaf_Application
 | _environ    | 当前的环境名，也就是Yaf_Application在读取配置的时候，获取的配置节名字 |
 | _run        | 布尔值，指明当前的Yaf_Application是否已经运行                |
 
+###### Yaf_Application::_construct()
+
+```php
+public void Yaf_Application::__construct(mixed $config, string $section = ap.environ);
+```
+
+初始化一个Yaf_Application, 如果$config 是一个 INI 文件，那么 $section 指明要读取的配置节。
+
+参数：
+
+config：关联数组的配置，或者指向一个 INI 格式的配置文件的路径的字符串，或者指向一个 Yaf_Config_Abstract 的实例
+
+返回值：void
+
+例：Yaf_Application::__construct
+
+```php
+<?php
+
+$config = array(
+
+	"ap" => array(
+
+		"directory" => "/usr/local/www/ap",
+
+	),
+
+);
+
+$app = new Yaf_Application($config);
+```
+
+输出：
+
+```bash
+object(Yaf_Application)#1 (6) {
+    ...
+}
+```
+
+###### Yaf_Application::bootstrap
+
+```php
+Yaf_Application Yaf_Application::bootstrap(void);
+```
+
+指示 Yaf_Application 去寻找Bootstrap(默认在ap.directory/Bootstrap.php),并执行所有在 Bootstrap 类中定义的，以 _init 开头的方法。一般用在处理请求之前，做一些个性化定制。
+
+Bootstrap 并不会调用 run，所以还需要在 Bootstrap 之后调用 Application::run 来运行 Yaf_Application 实例
+
+参数：void
+
+返回值：Yaf_Application
+
+例：Yaf_Application::bootstrap
+
+```php
+<?php
+$config = array(
+	"ap" => array(
+    	"directory" => "/usr/local/www/ap",
+    ),
+);
+$app = new Yaf_Application($config);
+$app->bootstrap()->run();
+```
+
+参见：
+
+[Yaf_Application::run]: http://www.laruence.com/manual/yaf.class.application.run.html
+[Yaf_Bootstrap_Abstra]: http://www.laruence.com/manual/yaf.class.bootstrap.html
+
+###### Yaf_Application::app()
+
+```php
+static Yaf_Application Yaf_Application::app(void)；
+```
+
+获取当前的 Yaf_Application 实例
+
+参数：void
+
+返回值：Yaf_Application
+
+例：Yaf_Application::app
+
+```php
+<?php
+$config = array(
+	"ap" => array(
+    	"directory" => "/usr/local/www/ap",
+    ),
+);
+$app = new Yaf_Application($config);
+assert($app === Yaf_Application::app();
+```
+
+###### Yaf_Application::environ()
+
+```php
+string Yaf_Application::environ(void);
+```
+
+获取当前 Yaf_Application 环境名
+
+参数：void
+
+返回值：当前的环境名，即 ini_get("yaf.environ")
+
+例：Yaf_Application::environ
+
+```php
+<?php
+$config = array(
+	"application" => array(
+    	"directory" => "/usr/local/www/yaf",
+    ),
+);
+$app = new Yaf_Application($config);
+print($app->environ());   // 例如配的环境是product，这里即打印 “product”
+```
+
+###### Yaf_Application::run()
+
+```php
+boolean Yaf_Application::run(void);
+```
+
+运行一个 Yaf_Application,开始接受并处理请求，这个方法只能调用一次，多次调用并不会有特殊效果。
+
+参数：void
+
+返回：boolean
+
+例：Yaf_Application::run
+
+```php
+<?php
+$config = array(
+	"application" => array(
+    	"directory" => "/usr/local/www/yaf",
+    ),
+);
+$app = new Yaf_Application($config);
+$app->run();
+```
+
+###### Yaf_Application::execute()
+
+```php
+mixed Yaf_Application::execute(callback $function, mixed $parameter = NULL, $parameter $... = NULL);
+```
+
+在 Yaf_Application 的环境下，运行一个用户自定义函数过程，主要用在使用 Yaf 做简单的命令行脚本时，应用 Yaf 的外围环境，比如：自动加载，配置，视图引擎等。
+
+> 注意：如果需要使用 Yaf 的路由分发，也就是说，如果是需要在 CLI 下全功能运行 Yaf, 请参考 
+>
+> [在命令行下使用]: http://www.laruence.com/manual/yaf.incli.html
+
+参数：
+
+$function: 要运行的函数或方法，方法可以通过 array($obj, "method_name") 来定义。
+
+$parameter: 零个或多个要传递给函数的参数。
+
+返回值：
+
+被调用函数或者方法的返回值
+
+例：Yaf_Application::execute
+
+```php
+<?php
+$config = array(
+	"ap" => array(
+    	"directory" => "/usr/local/www/ap",
+    ),
+);
+$app = new Yaf_Application($config);
+$app->execute("main");
+
+function main(){
+    ...
+}
+    
+```
+
+参见：9.在命令行使用 Yaf
+
+###### Yaf_Application::getDispatcher
+
+```php
+Yaf_Config_Abstract Yaf_Application::getDispatcher(void);
+```
+
+获取当前的分发器
+
+参数：void
+
+返回值：Yaf_Dispatcher 的实例
+
+例：Yaf_Application::getDispatcher 
+
+```php
+<?php
+define("APPLICATION_PATH", dirname(__FILE__));
+$app = new Yaf_Application("conf/application_simple.ini")；
+// bootstrap
+$app->getDispatcher()->setAppDirectory(APPLICATION_PATH . "/action/")->getApplication()->bootstrap()->run();
+// 当然也可以这么写
+$dispatcher = Yaf_Dispatcher::getInstance()->setAppDirectory(APPLICATION_PATH . "/action/")->getApplication()->bootstrap()->run();
+```
+
+###### Yaf_Application::getConfig
+
+```php
+Yaf_Config_Abstract Yaf_Application::getConfig(void);
+```
+
+获取 Yaf_Application 读取的配置项。
+
+参数：void
+
+返回值：Yaf_Config_Abstract
+
+例：Yaf_Application::getConfig
+
+```php
+<?php
+$config = array(
+	"ap" => array(
+    	"directory" => "/usr/local/www/ap",
+    ),
+);
+$app = new Yaf_Application($config);
+print_r($app->getConfig('application'));
+
+// 输出
+Yaf_Config Object(
+	[_config:private] => array(
+    	[ap] => array(
+        	[directory] => /usr/local/www/ap
+        )
+    )
+)
+```
+
+###### Yaf_Application::getModules
+
+```php
+string Yaf_Application::getModules(void);
+```
+
+获取在配置文件中声明的模块。
+
+参数：void
+
+返回值：string
+
+例：Yaf_Application::getModules
+
+```php
+<?php
+$config = array(
+	"ap" => array(
+    	"directory" => "/usr/local/www/ap",
+        "modules" => "Index",
+    ),
+);
+$app = new Yaf_Application($config);
+print_r($app->getModules());
+
+// 输出
+Array(
+	[0] => Index
+)
+```
+
 #### 11_2.Yaf_Bootstrap_Abstract
 
 #### 11_3.Yaf_Loader

@@ -1370,6 +1370,63 @@ Array(
 
 #### 11_2.Yaf_Bootstrap_Abstract
 
+###### 简介
+
+Yaf_Bootstrap_Abstract 提供了一个可以定制 Yaf_Application 的最早的时机，它相当于一段引导，入口程序。他本身没有定义任何方法，但任何继承自 Yaf_Bootstrap 的类中以 _init 开头的方法，都会在 Yaf_Application::bootstrap 时被调用，调用的顺序和这些方法在类中的定义顺序相同，Yaf 保证这种调用顺序。
+
+> 注意：这些方法，都可以接受一个  Yaf_Dispatcher 参数
+
+例：Yaf_Bootstrap_Abstract 的例子
+
+```php
+<?php
+/**
+ * 所有在 Bootstrap 类中，以 _init 开头的方法，都会被 Yaf 调用。这些方法都接受一个参数：Yaf_Dispatcher $dispatcher 调用的次序，和声明的次序相同。
+ */
+class Bootstrap extends Yaf_Bootstrap_Abstract
+{
+    /**
+     * 注册一个插件
+     * 插件的目录是在 application_directory/plugins
+     */
+    public function _initPlugin(Yaf_Dispatcher $dispatcher) {
+        $user = new UserPlugin();
+        $dispatcher->registerPlugin($user);
+    }
+    /**
+     * 添加配置中的路由
+     */
+    public function _initRoute(Yaf_Dispatcher $dispatcher) {
+        $router = Yaf_Dispatcher::getInstance()->getRouter();
+        $router->addConfig(Yaf_Registry::get('config')->routes);
+        // 添加一个路由
+        $route = new Yaf_Route_Rewrite(
+        	"/product/list/:id/",
+            array(
+            	"controller" => "product",
+                "action" => "info",
+            )
+        );
+        $router->addRoute('dummy', $route);
+    }
+    
+    // 自定义视图引擎
+    public function _initSmarty(Yaf_Dispatcher $dispatcher){
+        $smarty = new Smarty_Adapter(null, Yaf_Registry::get("config")->get("smarty"));
+        Yaf_Dispatcher::getInstance()->setView($smarty);
+    }
+}
+
+// 在入口文件：
+<?php
+// 默认的，Yaf_Application 将会读取配置文件中在 php.ini 中设置的 ap.environ 的配置节。
+$application = new Yaf_Application("conf/sample.ini");
+// 如果没有关闭自动 response(通过 Yaf_Dispatcher::getInstance()->autoResponse(FALSE)), 则 $response 会被自动输出，此处也不需要再次输出 Response
+$response = $application->bootstrap()->run();
+```
+
+
+
 #### 11_3.Yaf_Loader
 
 #### 11_4.Yaf_Dispatcher

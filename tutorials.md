@@ -2421,6 +2421,30 @@ Yaf_Registry::del('config');
 
 #### 11_7.Yaf_Session
 
+###### 简介
+
+Yaf_Session 是 Yaf 的 Session 的包装，实现了 Iterator, ArrayAccess, Countable 的接口，方便使用。
+
+在 PHP5.3 以后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Session
+
+```php
+final Yaf_Session implements Iterator,ArrayAccess,Countable
+{
+    public static Yaf_Session getInstance();
+    public Yaf_Session start();
+    public mixed get(string $name = NULL);
+    public boolean set(string $name, mixed $value);
+    public mixed __get(string $name);
+    public boolean __set(string $name, mixed $value);
+    public boolean has(string $name);
+    public boolean del(string $name);
+    public boolean __isset(string $name);
+    public boolean __unset(string $name);
+}
+```
+
+
+
 #### 11_8.Yaf_Config_Abstract
 
 #### 11_9.Yaf_Controller_Abstract

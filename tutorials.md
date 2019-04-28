@@ -2291,6 +2291,26 @@ public boolean Yaf_Dispatch::dispatch(Yaf_Request_Abstract $request);
 
 #### 11_5.Yaf_Plugin_Abstract
 
+###### 简介
+
+Yaf_Plugin_Abstract 是 Yaf 的插件基类，所有应用在 Yaf 的插件都需要继承实现这个类，这个类定义了 7 个方法，依次在 7 个实际的时候被调用
+
+在 PHP5.3以后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Plugin_Abstract
+
+```php
+abstract Yaf_Plugin_Abstract
+{
+    public void routerStartup (Yaf_Request_Abstract $request, Yaf_Response_Abstract $response);
+    public void routerShutdown (Yaf_Request_Abstract $request, Yaf_Response_Abstract $response);
+    public void dispatchLoopStartup (Yaf_Request_Abstract $request, Yaf_Response_Abstract $response);
+    public void preDispatch (Yaf_Request_Abstract $request, Yaf_Response_Abstract $response);
+    public void postDispatch (Yaf_Request_Abstract $request, Yaf_Response_Abstract $response);
+    public void dispatchLoopShutdown (Yaf_Request_Abstract $request, Yaf_Response_Abstract $response);
+}
+```
+
+>  注意：插件有两种部署方式，一种部署在 plugins 目录下，通过名称中的后缀（可通过 ap.name_suffix 和 ap.name_separator 来改变具体命名形式）来使得自动加载器可以正确加载。另一种是放置在类库，由普通加载规则加载。但是无论哪种形式，用户自定义的插件都要继承自 Yaf_Plugin_Abstract.
+
 #### 11_6.Yaf_Registry
 
 #### 11_7.Yaf_Session

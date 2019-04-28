@@ -2313,6 +2313,24 @@ abstract Yaf_Plugin_Abstract
 
 #### 11_6.Yaf_Registry
 
+###### 简介
+
+Yaf_Registry, 对象注册表（或称对象仓库）是一个用于在整个应用空间（applciaiton space）内存储对象和值的容器。通过把对象存储在其中，我们可以在整个项目的任何地方使用同一个对象。这种机制相当于一种全局存储。我们可以通过 Yaf_Registry 类的静态方法来使用对象注册表。另外，由于该类是一个数组对象，我们可以使用数组形式来访问其中的类方法。
+
+在 PHP5.3 以后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Registry
+
+```php
+Yaf_Registry
+{
+    public static Yaf_Registry has (string $name);
+    public static Yaf_Registry get (string $name);
+    public static Yaf_Registry set (string $name, mixed $value);
+    public static Yaf_Registry del (string $name);
+}
+```
+
+
+
 #### 11_7.Yaf_Session
 
 #### 11_8.Yaf_Config_Abstract

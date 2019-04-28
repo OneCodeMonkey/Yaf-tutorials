@@ -2329,6 +2329,94 @@ Yaf_Registry
 }
 ```
 
+###### Yaf_Registry::set
+
+```php
+public static Yaf_Registry Yaf_Registry::set(string $name, mixed $value);
+```
+
+往全局注册表里添加一个新的项
+
+参数：$name: 要注册的项名
+
+$value: 要注册的项的值
+
+返回值：Yaf_Registry
+
+例：Yaf_Registry::set
+
+```php
+<?php
+// 存入
+Yaf_Registry::set('config', Yaf_Application::app()->getConfig());
+// 之后可以在任何地方获取到
+$config->Yaf_Registry::get("config");
+```
+
+###### Yaf_Registry::get
+
+```php
+public static Yaf_Registry Yaf_Registry::get(string $name);
+```
+
+获取注册表中寄存的项
+
+参数：$name:  要获取的项的名字
+
+返回值：成功，返回要注册的注册项值，失败则返回 FALSE
+
+例：Yaf_Registry::get
+
+```php
+<?php
+// 存入
+Yaf_Registry::set('config', Yaf_Application::app()->getConfig());
+// 之后可以在任何地方获取到
+$config->Yaf_Registry::get("config");
+```
+
+###### Yaf_Registry::has
+
+```php
+public static Yaf_Registry Yaf_Registry::has(string $name);
+```
+
+查询某一项目是否存在于注册表中
+
+参数：$name:  要查询的项的名
+
+返回值：存在，返回 TRUE；不存在，返回 FALSE
+
+例：Yaf_Registry::has
+
+```php
+<?php
+// 存入
+Yaf_Registry::set('config', Yaf_Application::app()->hasConfig());
+assert(Yaf_Registry::has('config'));
+```
+
+###### Yaf_Registry::del
+
+```php
+public static Yaf_Registry Yaf_Registry::del(string name);
+```
+
+删除存在于注册表的名为 $name 的项目
+
+参数：$name:  要删除的项的名
+
+返回值： 成功，返回TRUE；失败， 返回 FALSE
+
+例：Yaf_Registry::del
+
+```php
+<?php
+// 存入
+Yaf_Registry::set('config', Yaf_Application::app()->delConfig());
+Yaf_Registry::del('config');
+```
+
 
 
 #### 11_7.Yaf_Session

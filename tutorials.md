@@ -2447,6 +2447,41 @@ final Yaf_Session implements Iterator,ArrayAccess,Countable
 
 #### 11_8.Yaf_Config_Abstract
 
+###### 简介
+
+Yaf_Config_Abstract 被设计在应用程序中简化访问和使用配置数据，config 为在应用程序中访问这样的配置数据提供了一个基于用户接口的嵌入式对象属性。配置数据可能来自于各种支持等级结构数据存储的媒体。Yaf_Config_Abstract 实现了Countable，ArrayAccess 和 Iterator 接口，这样可以基于 Yaf_Config_Abstract 对象使用 count() 函数和 PHP 语句如 foreach，也可以通过数组方式访问 Yaf_Config_Abstract  的元素。
+
+Yaf_Config_INI 为存储在ini文件中的配置数据提供了适配器。Yaf_Config_Simple 为存储在PHP数组中的配置数据提供了适配器。
+
+在 PHP5.3以后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Config_Abstract
+
+```php
+Abstract Yaf_Config_Abstract implements Iterator,ArrayAccess,Countable
+{
+    protected array _config;
+    protected array _readonly;
+    public mixed get(string $name = NULL);
+    public mixed __get(string $name);
+    public mixed __isset(string $name);
+    public mixed __set(string|int $name,mixed $value);
+    public mixed set(string|int $name, mixed $value);
+    public mixed count();
+    public mixed offsetGet(string|int $name);
+    public mixed offsetSet(string|int $name,mixed $value);
+    public mixed offsetExists(string|int $name);
+    public mixed offsetUnset(string|int $name);
+    public void rewind();
+    public mixed key();
+    public mixed next();
+    public mixed current();
+    public boolean valid();
+    public array toArray();
+    public boolean readOnly();
+}
+```
+
+
+
 #### 11_9.Yaf_Controller_Abstract
 
 #### 11_10.Yaf_Action_Abstract

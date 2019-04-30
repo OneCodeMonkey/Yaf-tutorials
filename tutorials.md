@@ -2480,7 +2480,62 @@ Abstract Yaf_Config_Abstract implements Iterator,ArrayAccess,Countable
 }
 ```
 
+###### 属性说明
 
+_config: 配置实际的保存容器
+
+_readonly: 配置是否容许修改。对于 Yaf_Config_Ini 来说永远都是TRUE
+
+###### The Yaf_Config_Ini class
+
+简介：Yaf_Config_INI 为存储在 Ini 文件的配置数据提供了适配器。
+
+在PHP5.3之后，默认打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Config_Ini
+
+> 注意：当使用 INI 文件作为 Yaf_Application 时，可以打开 ap.cache_config 来提升性能。
+
+说明：Yaf_Config_Ini 允许开发者通过嵌套的对象属性语法，在应用程序中用熟悉的 INI 格式存储和读取配置数据。INI 格式在提供拥有配置数据键的等级结构和配置数据节之间的继承能力方面具有专长。
+
+配置数据等级结构通过 '.' 或 '。' 分离键值。一个节可以扩展或通过在节的名称之后带一个冒号（：）和被继承的配置数据的节的名称来从另一个节继承。
+
+例：INI 文件
+
+```ini
+[base]
+database.master.host = localhost
+[production : base]
+;Yaf的配置
+application.directory = /usr/local/www/production
+;应用的配置
+webhost = www.example.com
+database.adapter = pdo.mysql
+database.params.host = db.example.com
+database.params.username = dbuser
+database.params.password = secret
+database.params.dbname = daname
+;开发站点配置数据从生产站点配置数据集成，有需要可以重写
+[dev : production]
+application.directory = /usr/dev/htdocs
+database.params.host = dev.example.com
+database.params.username = devuser
+database.params.password = devsecret
+```
+
+dev 节将得到 production 节的所有配置，并间接获得 base 节的配置。并且覆盖 application.directory 的配置为 “/usr/dev/htdocs”
+
+Yaf_Config_Abstract 实现了 __get 方法，所以获取配置会很容易
+
+例：获取配置
+
+```php
+$config = new Yaf_Config_Ini('/path/to/config.ini', 'staging');
+echo $config->database->get('params')->host;  // ‘dev.example.com’
+echo $config->get("database")->params->dbname; // ‘dbname’
+```
+
+###### The Yaf_Config_Simple class
+
+简介：Yaf_Config_Simple 为存储在数组中的配置数据提供了适配器。在PHP5.3以后，打开 yaf.use_namespace 的情况下也可以使用 Yaf\Config_Simple.
 
 #### 11_9.Yaf_Controller_Abstract
 

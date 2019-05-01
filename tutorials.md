@@ -2539,6 +2539,423 @@ echo $config->get("database")->params->dbname; // ‘dbname’
 
 #### 11_9.Yaf_Controller_Abstract
 
+###### 简介
+
+Yaf_Controller_Abstract 是 Yaf 的 MVC 体系的核心
+
+Yaf_Controller_Abstract 体系具有可扩展性，可以通过继承已有的类来实现这个抽象类，从而添加应用自己的应用逻辑。
+
+对于 Controller 来说，真正的执行体是在 Controller 中定义的一个个动作，当然这些动作也可以定义在 Controller 外部
+
+与一般框架不同，在 Yaf 中可以定义动作的参数，这些参数的值来自对 Request 的路由结果中的同名参数值，比如对于如下控制器：
+
+例：Yaf_Controller_Abstract 参数动作
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction ($name, $value)
+    {
+    }
+}
+```
+
+在使用默认路由的情况下，对于请求 http://{hostname}/index/index/name/a/value/2 此请求我们知道会在 Request 对象中生成两个参数 name,value,  而注意到动作 indexAction 的参数与此同名，于是在 indexAction 中，可以有如下两种方式来获取这两个参数
+
+例：Yaf_Controller_Abstract 参数动作
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction ($name, $value)
+    {
+        // 直接获取参数
+        echo $name,$value;
+        // 通过 Request 对象获取
+        echo $this->getRequest()->getParam('name');
+    }
+}
+```
+
+> 注意：需要注意的是，这些参数是来自用户请求 URL，所以使用前一定要做安全化过滤，另外，为了防止 PHP 抛出参数缺失的警告，请尽量定义有默认值的参数
+
+在PHP5.3 以后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Controller_Abstract
+
+```php
+abstract Yaf_Controller_Abstract
+{
+    protected array actions;
+    protected Yaf_Request_Abstract _request;
+    protected Yaf_Response_Abstract _response;
+    protected Yaf_View_Interface _view;
+    protected string _script_path;
+    private void __construct();
+    public void init();
+    public string getModuleName();
+    public Yaf_Request_Abstract getRequest();
+    public Yaf_Response_Abstract getResponse();
+    public Yaf_View_Interface getView();
+    public Yaf_View_Interface initView();
+    public boolean setViewPath (string $view_directory);
+    public string getViewPath();
+    public Yaf_Response_Abstract render(string $action_name, array $tpl_vars = NULL);
+    public boolean display(string $action_name, array $tpl_vars = NULL);
+    public boolean forward(string $action, array $invoke_args = NULL);
+    public boolean forward(string $controller, string $action, array $invoke_args = NULL);
+    public boolean forward(string $module, string $controller, string $action, array $invoke_args = NULL);
+    public boolean redirect(string $url);
+}
+```
+
+###### 属性说明
+
+actions:  有时候为了拆分比较大的 Controller，让代码更清晰可读和方便管理，Yaf 支持将具体的动作分开定义。每个动作都需要实现 Yaf_Action_Abstract 就可以通过定义 Yaf_Controller_Abstract::$actions 来指明哪些动作具体应用于哪些分离的类，
+
+例如：
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public $actions = [
+        "index" => "actions/Index.php",
+    ];
+}
+```
+
+这样当路由到达动作 Index 时，就会加载 APPLICATION_PATH . "/actions/Index.php"，并且在这个脚本文件中寻找 IndexAction (可通过 yaf.name_suffix 和 yaf.name_separator 来改变具体命名形式)，继而调用这个类的 execute 方法：
+
+> 注意：在 yaf.st_compatible 打开的情况下，会产生额外的查找逻辑。
+
+_request:  当前的请求实例，属性的值由 Yaf_Dispatcher 保证，一般通过 Yaf_Controller_Abstract::getRequest 来获取此属性
+
+_response:  当前的响应对象，属性的值由 Yaf_Dispatcher 保证，一般通过 Yaf_Controller::getResponse 来获取此属性。
+
+_view:  视图引擎，Yaf 才会延时实例化视图引擎来提高性能，所以这个属性直到显式调用 Yaf_Controller_Abstract::getView 或者 Yaf_Controller_Abstract::initView 以后才可用。
+
+_script_path:  视图文件的目录，默认值由 Yaf_Dispatcher 保证，可通过 Yaf_Controller_Abstract::setViewPath 来改变这个值。
+
+###### Yaf_Controller_Abstract::getModuleName
+
+```php
+public string Yaf_Controller_Abstract::getModuleName();
+```
+
+获取当前控制器所属的模块名
+
+参数：void
+
+返回值：成功返回模块名，失败返回 NULL
+
+例：Yaf_Controller_Abstract::getModuleName
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        echo $this->getModuleName();
+    }
+}
+```
+
+###### Yaf_Controller_Abstract::getRequest
+
+```php
+public Yaf_Request_Abstract Yaf_Controller_Abstract::getRequest();
+```
+
+获取当前的请求实例
+
+参数：void
+
+返回值：Yaf_Request_Abstract
+
+例：Yaf_Controller_Abstract::getRequest
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $request = $this->getRequest();
+    }
+}
+```
+
+###### Yaf_Controller_Abstract::getResponse
+
+```php
+public Yaf_Response_Abstract Yaf_Controller_Abstract::getResponse();
+```
+
+获取当前的响应实例
+
+参数：void
+
+返回值：Yaf_Request_Abstract
+
+例：Yaf_Controller_Abstract::getResponse
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $response = $this->getResponse();
+    }
+}
+```
+
+###### Yaf_Controller_Abstract::getView
+
+```php
+public Yaf_View_Interface Yaf_Controller_Abstract::getView();
+```
+
+获取当前的视图引擎
+
+参数：void
+
+返回值：Yaf_View_Interface
+
+例：Yaf_Controller_Abstract::getView
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $view = $this->getView();
+    }
+}
+```
+
+###### Yaf_Controller_Abstract::initView
+
+```php
+public Yaf_View_Interface Yaf_Controller_Abstract::initView();
+```
+
+初始化视图引擎，因为 Yaf 采用延时实例化视图引擎的策略，所以只有在使用前调用此方法，视图引擎才会被实例化
+
+参数：void
+
+返回值：Yaf_View_Interface
+
+例：Yaf_Controller_Abstract::initView
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $view = $this->initView();
+        // 此后就可以直接通过获取 Yaf_Controller_Abstract::$_view 来访问当前的视图引擎
+        $this->_view->assign("webroot", "http://{hostname}");
+    }
+}
+```
+
+###### Yaf_Controller_Abstract::setViewPath
+
+```php
+public boolean Yaf_Controller_Abstract::setViewPath(string $view_directory);
+```
+
+更改视图模板目录，之后 Yaf_Controller_Abstract::render 就会在整个目录下寻找模板文件。
+
+参数：void
+
+返回值：成功则返回 Yaf_Controller_Abstract，失败返回 FALSE
+
+例：Yaf_Controller_Abstract::setViewPath
+
+```php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $this->setViewPath("/usr/local/www/tpl");
+    }
+}
+```
+
+###### Yaf_Controller_Abstract::getViewPath
+
+```php
+public string Yaf_Controller_Abstract::getViewPath();
+```
+
+获取当前的模板目录
+
+参数：void
+
+返回值：成功返回模板目录，失败返回 NULL
+
+例：Yaf_Controller_Abstract::getViewPath
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        echo $this->getViewPath();
+    }
+}
+```
+
+###### Yaf_Controller_Abstract::render
+
+```php
+public Yaf_Response_Abstract Yaf_Controller_Abstract::render(string $action, array $tpl_vars = NULL);
+```
+
+渲染视图模板，得到渲染结果
+
+> 注意：此发方法是对 Yaf_View_Interface::render 的封装
+
+参数：$action:  要渲染的动作名
+
+$tpl_vars:  传递给视图引擎的渲染参数，当然也可以使用 Yaf_View_Interface::assign 来替代
+
+返回值：Yaf_Response_Abstract
+
+例：Yaf_Controller_Abstract::render
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        // 首先关闭自动渲染
+        Yaf_Dispatcher::getInstance()-disableView();
+    }
+    public function indexAction()
+    {
+        $this->initView();
+        // 自己输出响应
+        echo $this->render("test.phtml");
+    }
+}
+```
+
+###### Yaf_Controller_Abstract::display
+
+```php
+public boolean Yaf_Controller_Abstract::display(string $action, array $tpl_vars = NULL);
+```
+
+渲染视图模板，并直接输出渲染结果。
+
+> 注意：此方法是对 Yaf_View_Interface::display 的包装
+
+参数：$action:  要渲染的动作名
+
+$tpl_vars:  传递给视图引擎的渲染参数，当然也可以使用 Yaf_View_Interface::assign 来替代。
+
+返回值：成功返回 TRUE，失败返回 FALSE
+
+例：Yaf_Controller_Abstract::display
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        // 首先关闭自动渲染
+        Yaf_Dispatcher::getInstance()->disableView();
+    }
+    public function indexAction()
+    {
+        $this->initView();
+        // 输出响应
+        $this->display("test.phtml", ["name" => "value"]);
+    }
+}
+```
+
+###### Yaf_Controller_Abstract::forward
+
+```php
+public boolean Yaf_Controller_Abstract::forward(string $action, array $params = NULL);
+```
+
+```php
+public boolean Yaf_Controller_Abstract::forward(string $controller, string $action, array $params = NULL);
+```
+
+```php
+public boolean Yaf_Controller_Abstract::forward(string $module, string $controller, string $action, array $params = NULL);
+```
+
+将当前请求交给另一个 action 处理
+
+> 注意：Yaf_Controller_Abstract::forward 只是登记下要 forward 的目标地，并不会立即执行跳转。而是会等到当前的 action 执行完成以后，才会进行新一轮的 dispatch.
+>
+> 参数：$module:  要转给动作的模块，注意要首字母大写，如果为空则转给当前模块。
+>
+> $controller:  要转给动作的控制器，注意要首字母大写，如果为空则转给当前控制器
+>
+> $action:  要转给的动作，注意要全部小写
+>
+> $params:  关联数组，附加的参数可通过 Yaf_Request_Abstract::getParams 拿到
+>
+> 返回值：成功返回 Yaf_Controller_Abstract，失败返回 FALSE
+>
+> 例：Yaf_Controller_Abstract::forward
+>
+> ```php
+> <?php
+> class IndexController extends Yaf_Controller_Abstract
+> {
+>     public function init()
+>     {
+>         // 如果用户没登录，则转给登录操作
+>         if($user_not_login) {
+>             $this->forward("login");
+>         }
+>     }
+> }
+> ```
+>
+> ###### Yaf_Controller_Abstract::redirect
+>
+> ```php
+> public boolean Yaf_Controller_Abstract::redirect(string $url);
+> ```
+>
+> 重定向请求到新的路径
+>
+> 参数：$url:  要定向的路径
+>
+> 返回值：成功返回 Yaf_Controller_Abstract， 失败返回 FALSE
+>
+> 例：Yaf_Controller_Abstract::redirect
+>
+> ```php
+> <?php
+> class IndexController extends Yaf_Controller_Abstract
+> {
+>     public function init()
+>     {
+>         if($user_not_login) {
+>             $this->redirect("/login/");
+>         }
+>     }
+> }
+> ```
+
 #### 11_10.Yaf_Action_Abstract
 
 #### 11_11.Yaf_View_Interface

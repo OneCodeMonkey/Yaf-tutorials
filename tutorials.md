@@ -2958,6 +2958,23 @@ public boolean Yaf_Controller_Abstract::forward(string $module, string $controll
 
 #### 11_10.Yaf_Action_Abstract
 
+###### 简介
+
+Yaf_Action_Abstract 是 MVC 中 C 的动作，一般而言动作都是定义在 Yaf_Controller_Abstract 的派生类中。但有的时候为使得代码更清晰，分离一些大的控制器，我们选择单独去继承这个 Yaf_Action_Abstract 来实现。
+
+Yaf_Action_Abstract 体系具有可扩展性，可通过继承已有的类来实现这个抽象类，从而添加我们自己的应用逻辑。
+
+在PHP5.3以后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Action_Abstract.
+
+```php
+abstract Yaf_Action_Abstract extends Yaf_Action_Controller
+{
+	public abstract void execute();
+}
+```
+
+
+
 #### 11_11.Yaf_View_Interface
 
 #### 11_12.Yaf_Request_Abstract

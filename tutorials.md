@@ -3244,6 +3244,282 @@ class IndexController extends Yaf_Controller_Abstract
 
 #### 11_12.Yaf_Request_Abstract
 
+###### 简介
+
+代表了一个实际请求，一般地我们不用主动实例化它，Yaf_Application 在 run 以后会自动根据当前请求实例化它。
+
+在PHP5.3以后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Request_Abstract
+
+```php
+abstract Yaf_Request_Abstract
+{
+    protected string _method;
+    protected string _module;
+    protected string _controller;
+    protected string _action;
+    protected array _params;
+    protected string _language;
+    protected string _base_uri;
+    protected string _request_uri;
+    protected boolean _dispatched;
+    protected boolean _routed;
+    public string getModuleName();
+    public string getControllerName();
+    public string getActionName();
+    public boolean setModuleName(string $name);
+    public boolean setControllerName(string $name);
+    public boolean setActionName(string $name);
+    public Exception getException();
+    public mixed getParams();
+    public mixed getParam(string $name, mixed $default = NULL);
+    public mixed setParam(string $name, mixed $value);
+    public mixed getMethod();
+    abstract public mixed getLanguage();
+    abstract public mixed getQuery(string $name = NULL);
+    abstract public mixed getPost(string $name = NULL);
+    abstract public mixed getEnv(string $name = NULL);
+    abstract public mixed getServer(string $name = NULL);
+    abstract public mixed getCookie(string $name = NULL);
+    abstract public mixed getFiles(string $name = NULL);
+    abstract public bool isGet();
+    abstract public bool isPost();
+    abstract public bool isHead();
+    abstract public bool isXmlHttpRequest();
+    abstract public bool isPut();
+    abstract public bool isDelete();
+    abstract public bool isOption();
+    abstract public bool isCli();
+    public bool isDispatched();
+    public bool setDispatched();
+    public bool isRouted();
+    public bool setRouted();
+}
+```
+
+###### 属性说明
+
+_method:  当前请求的 Method。对于命令行来说，Method 为 “CLI”
+
+_language:  当前请求希望接受的语言。对于 Http 请求而言，这个值来自分析请求头 Accept-Language。对于不能鉴别的情况，此值为 NULL.
+
+_module:  在路由完成之后，请求被分配到的模块名
+
+_controller:  在路由完成之后，请求被分配到的控制器名
+
+_action:  在路由完成之后，请求被分配到的动作名
+
+_params:  当前请求的附加参数
+
+_routed:  表示当前请求是否已经完成路由
+
+_dispatched:  表示当前请求是否已经完成分发
+
+_requeset_uri:  当前请求的 Request URI
+
+_base_uri:  当前请求 Request URI 要忽略的前缀，一般不需要手动配置，Yaf会自己分析。当 Yaf 分析出错时，可通过 application.baseUri 来手动设置。
+
+###### The Yaf_Request_Http class
+
+简介：代表了一个实际的 Http 请求。一般我们不用主动实例化它，Yaf_Application 会在 run 之后自动根据当前请求实例化它。
+
+在PHP5.3后，打开 yaf.use_namespace 的请求下，也可以使用 Yaf\Request_Http
+
+```php
+final Yaf_Request_Http extends Yaf_Request_Abstract
+{
+    public void __construct(string $request_uri = NULL, string $base_uri = NULL);
+    public mixed getLanguage();
+    public mixed getQuery(string $name = NULL);
+    public mixed getPost(string $name = NULL);
+    public mixed getEnv(string $name = NULL);
+    public mixed getServer(string $name = NULL);
+    public mixed getCookie(string $name = NULL);
+    public mixed getFiles(string $name = NULL);
+    public boolean isGet();
+    public boolean isPost();
+    public boolean isHead();
+    public boolean isXmlHttpRequest();
+    public boolean isPut();
+    public boolean isDelete();
+    public boolean isOption();
+    public boolean isCli();
+    public boolean isDispatched();
+    public boolean setDispatched();
+    public boolean isRouted();
+    public boolean setRouted();
+    public string getBaseUri();
+    public boolean setBaseUri(string $base_uri);
+    public string getRequestUri();
+}
+```
+
+###### The Yaf_Request_Simple class
+
+简介：代表了一个实际的请求，一般的不用自己实例化它，Yaf_Application 在run以后会自动根据当前请求来实例化它。
+
+在PHP5.3以后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Request_Simple
+
+```php
+final Yaf_Request_Simple extends Yaf_Request_Abstract
+{
+    public void __construct(string $module, string $controller, string $action, string $method, array $params = NULL);
+    public mixed getLanguage();
+    public mixed getQuery(string $name = NULL);
+    public mixed getPost(string $name = NULL);
+    public mixed getEnv(string $name = NULL);
+    public mixed getServer(string $name = NULL);
+    public mixed getCookie(string $name = NULL);
+    public mixed getFiles(string $name = NULL);
+    public bool isGet();
+    public bool isPost();
+    public bool isHead();
+    public bool isXmlHttpRequest();
+    public bool isPut();
+    public bool isDelete();
+    public bool isOption();
+    public bool isSimple();
+    public bool isDispatched();
+    public bool setDispatched();
+    public bool isRouted();
+    public bool setRouted();
+}
+```
+
+###### Yaf_Request_Abstract::getException
+
+```php
+public Exception Yaf_Request_Abstract::getException();
+```
+
+此方法适用于异常捕获下，在异常发生的时候，流程进入 Error 控制器的 error 动作时，获取当前发生的异常对象。
+
+参数：void
+
+返回值：在有异常的情况下，返回当前异常对象。没有异常的情况下返回 NULL
+
+例：Yaf_Request_Abstract::getException
+
+```php
+<?php
+class ErrorController extends Yaf_Controller_Abstract
+{
+    public function errorAction()
+    {
+        $exception = $this->getRequest()->getException;
+    }
+}
+```
+
+###### Yaf_Request_Abstract::getModuleName
+
+```php
+public string Yaf_Request_Abstract::getModuleName();
+```
+
+获取当前请求被 路由 到的模块名
+
+参数：void
+
+返回值：路由成功以后，返回当前被分发处理此请求的模块名。路由失败，返回NULL
+
+例：Yaf_Request_Abstract::getModuleName
+
+```php
+<?php
+class ErrorController extends Yaf_Controller_Abstract
+{
+    public function errorAction()
+    {
+        echo "current Module:" . $this->getRequest()->getModuleName();
+    }
+}
+```
+
+###### Yaf_Request_Abstract::getControllerName
+
+```php
+public string Yaf_Request_Abstract::getControllerName();
+```
+
+获取当前请求被路由到的控制器名。
+
+参数：void
+
+返回值：路由成功以后，返回当前被分发来处理此次请求的控制器名。路由失败返回NULL
+
+例：Yaf_Request_Abstract::getControllerName
+
+```php
+<?php
+class ErrorController extends Yaf_Controller_Abstract
+{
+    public function errorAction()
+    {
+        echo "current Controller:" . $this->getRequest()->getControllerName();
+    }
+}
+```
+
+###### Yaf_Request_Abstract::getActionName
+
+```php
+public string Yaf_Request_Abstract::getActionName();
+```
+
+获取当前请求被路由到的 action 名
+
+参数：void
+
+返回值：路由成功以后，返回当前被分发处理此次请求的动作名。路由失败返回 NULL
+
+例：Yaf_Request_Abstract::getActionName
+
+```php
+<?php
+class ErrorController extends Yaf_Controller_Abstract
+{
+    public function errorAction()
+    {
+        echo "current Action:" . $this->getRequest()->getActionName();
+    }
+}
+```
+
+###### Yaf_Request_Abstract::getParams
+
+```php
+public array Yaf_Request_Abstract::getParams();
+```
+
+获取当前请求中的所有路由参数，路由参数不是指 $_GET 或者 $_POST，而是指在路由过程中，路由协议根据 Request Uri 分析出的请求参数。
+
+比如对于默认的路由协议 Yaf_Route_Static，路由 一个如下请求：
+
+> http://www.example.com/module/controller/action/name1/value1/name2/value2.
+
+路由结束后，将得到两个路由参数：name1, name2，值对应分别为 value1, value2
+
+> 注意：路由参数和 $_GET, $_POST 一样，是来自用户的输入，都是不可信的。使用时要自行处理
+
+参数：void
+
+返回值：当前所有的路由参数
+
+例：Yaf_Request_Abstract::getParams
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction()
+    {
+        $this->getRequest()->getParams();
+    }
+}
+```
+
+
+
 #### 11_13.Yaf_Response_Abstract
 
 #### 11_14.Yaf_Router

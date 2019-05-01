@@ -2977,6 +2977,271 @@ abstract Yaf_Action_Abstract extends Yaf_Action_Controller
 
 #### 11_11.Yaf_View_Interface
 
+###### 简介
+
+Yaf_View_Interface 是为了提供可扩展的，可自定义的视图引擎而设定的视图引擎接口，他定义了用在 Yaf 上的视图引擎需要实现的方法和功能。
+
+在PHP5.3以后，打开 yaf.use_namespace 的情况下，也可以使用 yaf\View_Interface
+
+```php
+interface Yaf_View_Interface
+{
+    public string render(string $view_path, array $tpl_vars = NULL);
+    public boolean display(string $view_path, array $tpl_vars = NULL);
+    public boolean assign(mixed $name, mixed $value = NULL);
+    public boolean setScriptPath(string $view_directory);
+    public string getScriptPath();
+}
+```
+
+###### The Yaf_View_Simple class
+
+简介：Yaf_View_Simple 是 Yaf 自带的视图引擎，它追求性能，所以并没有提供类似 Smarty 那样的多样功能和复杂的语法。
+
+对于 Yaf_View_Simple 的视图模板，就是普通的PHP脚本，对于通过 Yaf_View_Interface::assign 的模板变量，可在视图模板中直接通过变量名使用。
+
+在PHP5.3 之后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\View_Simple
+
+```php
+Yaf_View_Simple extends Yaf_View_Interface
+{
+    protected array _tpl_vars;
+    protected string _script_path;
+    public string render(string $view_path, array $tpl_vars = NULL);
+    public boolean display(string $view_path, array $tpl_vars = NULL);
+    public string getScriptPath();
+    public boolean assign(string $name, mixed $value);
+    public boolean __set(string $name, mixed $value = NULL);
+    public mixed __get(string $name);
+}
+```
+
+属性说明：_tpl_vars:  所有通过Yaf_View_Simple::assign 分配的变量，都保存在这个变量里。
+
+_script_path:  当前视图引擎的模板文件的根目录
+
+###### Yaf_View_Simple::assign
+
+```php
+public boolean Yaf_View_Simple::assign(mixed $name, mixed $value = NULL);
+```
+
+为视图引擎分配一个模板变量，在视图模板中可通过 ${ $name } 获取模板变量值
+
+参数：$name:  字符串或关联数组，如果为字符串，则 $value 不能为空，此字符串代表要分配的变量名。如果为数组，则$value 需为空，此参数为变量名和值的关联数组
+
+$value:  分配的模板变量
+
+> 注意：如果 $name 不是合法的PHP变量名，比如整数或是包含 “ | ” 的字符串，那么在视图模板文件中将不能直接通过 ${$name} 来访问这个变量。当然，你还是可以在视图模板文件中通过 $this->_tpl_vars[ $name ] 来访问这个变量。
+
+返回值：成功返回 Yaf_View_Simple，失败返回 FALSE
+
+例：Yaf_View_Simple::assign
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $params = array('name' => 'value');
+        $this->getView()->assign($params)->assign("foo", "bar");
+    }
+}
+```
+
+###### Yaf_View_Simple::render
+
+```php
+public string Yaf_View_Simple::render(string $view_path, array $tpl_vars = NULL);
+```
+
+渲染一个视图模板，得到结果。
+
+参数：$view_path:  视图模板的文件，绝对路径，一般这个路径由 Yaf_Controller_Abstract 提供
+
+$tpl_vars:  关联数组，模板变量
+
+返回值：成功返回视图模板执行结果，失败返回 NULL
+
+例：Yaf_View_Simple::render
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction()
+    {
+        echo $this->getView()->render($this->_script_path . "/test.phtml");
+    }
+}
+```
+
+###### Yaf_View_Simple::display
+
+```php
+public string Yaf_View_Simple::display(string $view_path, array $tpl_vars = NULL);
+```
+
+渲染一个视图模板，并直接输出到客户端
+
+参数：$view_path:  视图模板的文件名，绝对路径，一般这个路径由 Yaf_Controller_Abstract 提供
+
+$tpl_vars:  关联数组，模板变量
+
+返回值：成功返回 TRUE，失败返回 FALSE
+
+例：Yaf_View_Simple::display
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction()
+    {
+        $this->getView()->display($this->_script_path . "/test.phtml");
+    }
+}
+```
+
+###### Yaf_View_Simple::setScriptPath
+
+```php
+public boolean Yaf_View_Simple::setScriptPath(string $view_directory);
+```
+
+设置模板文件的根目录，默认的Yaf_Dispatcher 会把这个根目录设成 APPLICATION_PATH . "/views".
+
+参数：$view_directory:  视图模板的根目录，绝对地址
+
+返回值：成功TRUE，失败FALSE
+
+例：Yaf_View_Simple::setScriptPath
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction()
+    {
+        $this->getView()->setScriptPath("/tmp/views/");
+    }
+}
+```
+
+###### Yaf_View_Simple::getScriptPath
+
+```php
+public string Yaf_View_Simple::getScriptPath(void);
+```
+
+获取当前的模板目录
+
+参数：void
+
+返回值：成功则返回当前的视图模板文件根目录，失败返回NULL
+
+例：Yaf_View_Simple::getScriptPath
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction()
+    {
+        echo $this->getView()->getScriptPath();
+    }
+}
+```
+
+###### Yaf_View_Simple::__set
+
+```php
+public boolean Yaf_View_Simple::__set(mixed $name, mixed $value = NULL);
+```
+
+为视图引擎分配一个模板变量，在视图模板中可直接通过 ${ $name } 获取模板变量值
+
+参数：$name:  字符串或关联数组，如果为字符串，则 $value 不能为空，此字符串代表要分配的变量名。如果为数组则 $value 须为空，此参数为变量名和值的关联数组。
+
+$value:  分配的模板变量值
+
+返回值：成功返回 Yaf_View_Simple，失败返回 FALSE
+
+例：Yaf_View_Simple::__set
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $this->getView()->name = "value";
+    }
+}
+```
+
+###### Yaf_View_Simple::__get
+
+```php
+public string Yaf_View_Simple::__get(string $name);
+```
+
+获取视图引擎的一个模板变量值
+
+参数：$name:  模板变量名
+
+返回值：成功则返回变量值，失败返回 NULL
+
+例：Yaf_View_Simple::__get
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $this->initView();
+    }
+    public function indexAction()
+    {
+        // 通过 __get 直接获取变量值
+        echo $this->_view->name;
+    }
+}
+```
+
+###### Yaf_View_Simple::get
+
+```php
+public string Yaf_View_Simple::get(string $name);
+```
+
+获取视图引擎的一个模板变量值
+
+参数：$name:  模板变量名
+
+返回值：成功返回变量值，失败返回NULL
+
+例：Yaf_View_Simple::get
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $this->initView();
+    }
+    public function indexAction()
+    {
+        echo $this->_view->get("name");
+    }
+}
+```
+
+
+
 #### 11_12.Yaf_Request_Abstract
 
 #### 11_13.Yaf_Response_Abstract

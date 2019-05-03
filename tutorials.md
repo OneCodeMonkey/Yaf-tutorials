@@ -3518,6 +3518,28 @@ class IndexController extends Yaf_Controller_Abstract
 }
 ```
 
+###### Yaf_Request_Abstract::getParam
+
+```php
+public string Yaf_Request_Abstract::getParam(string $name, mixed $default_value = NULL);
+```
+
+获取当前请求中的路由参数，路由参数不是指 $_GET 或 $_POST , 而是在路由过程中，路由协议根据 Request Uri 分析出的请求参数。
+
+比如对于默认的路由协议 Yaf_Route_Static，路由请求如下：
+
+```json
+http://{hostname}/module/controller/action/name1/value1/name2/value2
+```
+
+路由结束后将会得到两个路由参数，name1，name2，值分别为  value1，value2、
+
+> 注意：路由参数和 $_GET，$_POST 一样，是来自用户的输入，都是不可信的，使用前需要做完全过滤
+
+参数：$name: 要获取的路由参数名
+
+$default_value: 如果设定此参数，如果没有找到 $name, 路由参数，则返回此参数值。
+
 
 
 #### 11_13.Yaf_Response_Abstract

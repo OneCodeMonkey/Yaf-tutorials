@@ -3540,7 +3540,131 @@ http://{hostname}/module/controller/action/name1/value1/name2/value2
 
 $default_value: 如果设定此参数，如果没有找到 $name, 路由参数，则返回此参数值。
 
+返回值：
 
+找到返回对应的路由参数值，如果没有找到并且设置了 $default_value, 则返回 default_value, 否则返回 NULL
+
+例：Yaf_Request_Abstract::getParam
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction()
+    {
+        echo "user id: " . $this->getRequest()->getParam("userid", 0);
+    }
+}
+```
+
+###### Yaf_Request_Abstract::setParam
+
+```php
+public booleam Yaf_Request_Abstract::setParam(string $name, mixed $value);
+```
+
+为当前的请求设置路由参数
+
+参数：$name:  参数名
+
+$value:  值
+
+返回值：成功返回 Yaf_Request_Abstract 实例，失败返回 FALSE
+
+例：Yaf_Request_Abstract::setParam
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction()
+    {
+        $this->getRequest()->setParam("userid", 0);
+    }
+}
+```
+
+###### Yaf_Request_Abstract::getMethod
+
+```php
+public string Yaf_Request_Abstract::getMethod();
+```
+
+获取当前请求的类型，可能的返回值为 GET, POST, PUT, CLI, HEAD等等
+
+参数：void
+
+返回值：当前的请求类型
+
+例：Yaf_Request_Abstract::getMethod
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction()
+    {
+        if($this->getRequest()->getMethod() == "CLI") {
+            echo "Running in CLI mode.";
+        }
+    }
+}
+```
+
+###### Yaf_Request_Abstract::isCli
+
+```php
+public string Yaf_Request_Abstract::isCli();
+```
+
+获取当前请求是否为 CLI 请求
+
+参数：void
+
+返回值：是 CLI 请求返回  true， 不是返回 FALSE
+
+例：Yaf_Request_Abstract::isCli
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction()
+    {
+        if($this->getRequest()->isCli()) {
+            echo "Running in Cli mode.";
+        }
+    }
+}
+```
+
+###### Yaf_Request_Abstract::isGet
+
+```php
+public string Yaf_Request_Abstract::isGet();
+```
+
+获取当前请求是否是 GET 请求。
+
+参数： void
+
+返回值：是GET 请求返回 TRUE，不是返回 FALSE
+
+例：Yaf_Request_Abstract：：isGet
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function indexAction()\
+    {
+        if($this->getRequest()->isGet()) {
+            echo "Running in Get mode.";
+        }
+    }
+}
+    
+```
 
 #### 11_13.Yaf_Response_Abstract
 

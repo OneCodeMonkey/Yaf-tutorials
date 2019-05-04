@@ -3668,6 +3668,87 @@ class IndexController extends Yaf_Controller_Abstract
 
 #### 11_13.Yaf_Response_Abstract
 
+###### 简介
+
+响应对象和请求对象相对应，是发送给请求端的响应载体。
+
+在PHP5.3之后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Response_Abstract
+
+```php
+abstract Yaf_Response_Abstract
+{
+    protected array _body;
+    protected array _header;
+    public boolean setBody(string $body, string $name = NULL);
+    public boolean prependBody(string $body, string $name = NULL);
+    public boolean appendBody(string $body, string $name = NULL);
+    public boolean clearBody();
+    public string getBody();
+    public boolean response();
+    public boolean setRedirect(string $url);
+    public string __toString();
+}
+```
+
+###### 属性说明：
+
+_body：  响应给请求的 Body 内容
+
+_header:  响应给请求的 Header，目前是保留属性
+
+###### The Yaf_Response_Http class
+
+简介：Yaf_Response_Http 是在 Yaf 作为 Web 应用时默认的响应载体。
+
+```php
+final Yaf_Response_Http extends Yaf_Response_Abstract
+{
+    protected array _code = 200;
+}
+```
+
+属性说明：_code:  响应给请求端的 HTTP 状态码
+
+###### The Yaf_Response_Cli class
+
+简介：Yaf_Response_Cli 是在 Yaf 作为命令行应用时默认的响应载体。
+
+```php
+final Yaf_Response_Cli extends Yaf_Response_Abstract
+{
+    //TODO
+}
+```
+
+###### Yaf_Response_Abstract::setBody
+
+```php
+public boolean Yaf_Response_Abstract::setBody(string $body, string $name = NULL);
+```
+
+设置响应的 Body，$name 参数是保留参数，目前没有特殊效果，留空即可。
+
+参数：$body:  要响应的字符串，一般是一段 HTML 或者是一段 JSON
+
+$name:  要响应的字符串 key，一般的我们可以通过指定不同的 key，给一个 response 对象设置很多响应字符串，可以在所有的请求结束后做 layout, 如果我们不做特殊处理，交给 Yaf 去发送响应的话，所有我们设置的响应字符串会按照设置的先后顺序被输出给客户端。
+
+返回值：成功返回 Yaf_Response_Abstract 实例，失败返回 FALSE
+
+例：Yaf_Response_Abstract::setBody
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $this->getResponse()->setBody('hello world');
+    }
+}
+```
+
+
+
 #### 11_14.Yaf_Router
 
 #### 11_15.Yaf_Route_Interface

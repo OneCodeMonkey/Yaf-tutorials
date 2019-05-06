@@ -4124,5 +4124,20 @@ public boolean Yaf_Router::isModuleName(string $name);
 
 #### 11_15.Yaf_Route_Interface
 
+###### 简介
+
+Yaf_Router_Interface 是 Yaf 路由协议的标准接口，它的存在使得用户可以自定义路由协议
+
+在 PHP5.3 之后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Route_Interface
+
+```php
+Interface Yaf_Route
+{
+    abstract public boolean route(Yaf_Request_Abstract $request);
+}
+```
+
+参见：Yaf_Route_Static，Yaf_Router_Simple，Yaf_Route_Supervar，Yaf_Route_Rewrite，Yaf_Route_Regex
+
 #### 11_16.Yaf_Exception
 

@@ -3747,6 +3747,60 @@ class IndexController extends Yaf_Controller_Abstract
 }
 ```
 
+###### Yaf_Response_Abstract::appendBody
+
+```php
+public boolean Yaf_Response_Abstract::appendBody(string $body, string $name = NULL);
+```
+
+往已有的响应 body 后附加新的内容，$name 参数是保留参数，目前没有特殊效果，留空即可。
+
+参数：$body:  要附加的字符串，一般是 HTML，或是一段 JSON（返回给 Ajax 请求）
+
+$name:  保留参数，目前没有特殊效果
+
+返回值：成功返回 Yaf_Response_Abstract, 失败返回 FALSE
+
+例：Yaf_Response_Abstract::appendBody
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $this->getResponse()->appendBody("hello world");
+    }
+}
+```
+
+###### Yaf_Response_Abstract::prependBody
+
+```php
+public boolean Yaf_Response_Abstract::prependBody(string $body, string $name = NULL);
+```
+
+往已有的响应 body 前插入新的内容，$name 参数是保留参数，目前没有特殊效果，留空即可。
+
+参数：$body:  要附加的字符串，一般是 HTML，或是一段 JSON（返回给 Ajax 请求）
+
+$name:  保留参数，目前没有特殊效果
+
+返回值：成功返回 Yaf_Response_Abstract, 失败返回 FALSE
+
+例：Yaf_Response_Abstract::appendBody
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $this->getResponse()->prependBody("hello world");
+    }
+}
+```
+
 
 
 #### 11_14.Yaf_Router

@@ -4141,3 +4141,132 @@ Interface Yaf_Route
 
 #### 11_16.Yaf_Exception
 
+###### 简介
+
+Yaf_Exception 是 Yaf 使用的异常类型，它继承自 Exception，并实现了异常链。
+
+在 PHP5.3 之后，打开 yaf.use_namespace 的情况下，也可以使用 Yaf\Exception
+
+> 注意：只有在 yaf.throw_exception(php.ini) 或 yaf.throwExecption(配置文件) 开启的情况下，Yaf 才会抛出异常，否则 Yaf 在出错的情况下将 trigger_error，在这种情况下，可使用 Yaf_Dispatcher::setErrorHandler 来捕获错误。
+>
+> ```php
+> Yaf_Exception
+> {
+>     protected string message;
+>     protected string code;
+>     private Exception _previous;
+>     public void __construct(string $message, int $code = 0, Exception $previous = NULL);
+>     final public string Exception::getMessage();
+>     final public int Exception::getCode();
+>     public final Exception getPrevious();
+>     final public string Exception::getFile();
+>     final public int Exception::getLine();
+> }
+> ```
+>
+> ###### 属性说明
+>
+> message:  异常信息
+>
+> code:  异常代码
+>
+> _previous:  此异常之前的异常
+>
+> ###### Yaf_Exceptiopn_StartupError
+>
+> 简介：继承自 Yaf_Exception，在 Yaf 启动失败时抛出。
+>
+> ```php
+> Yaf_Exception_StartupError extends Yaf_Exception
+> {
+>     protected string code = YAF_ERR_STARTUP_FAILED;
+> }
+> ```
+>
+> ###### Yaf_Exception_RouterFailed
+>
+> 继承自 Yaf_Exception，在路由失败时抛出。
+>
+> ```php
+> Yaf_Exception_RouterFailed extends Yaf_Exception
+> {
+>     protected string code = YAF_ERR_ROUTER_FAILED;
+> }
+> ```
+>
+> ###### Yaf_Exception_DispatchFailed
+>
+> 继承自 Yaf_Exception，在分发失败时抛出。
+>
+> ```php
+> Yaf_Exception_DispatchFailed extends Yaf_Exception
+> {
+>     protected string code = YAF_ERR_DISPATCH_FAILED;
+> }
+> ```
+>
+> ###### Yaf_Exception_LoadFailed
+>
+> 继承自 Yaf_Exception，在加载需要类失败时抛出。
+>
+> ```php
+> Yaf_Exception_LoadFailed extends Yaf_Exception
+> {
+>     protected string code = YAF_ERR_AUTOLOAD_FAILED;
+> }
+> ```
+>
+> ###### Yaf_Exception_LoadFailed_Module
+>
+> 继承自 Yaf_Exception_LoadFailed，在找不到路由指定的模块时抛出。
+>
+> ```php
+> Yaf_Exception_LoadFailed_Module extends Yaf_Exception_LoadFailed
+> {
+>     protected string code = YAF_ERR_NOTFOUND_MODULE;
+> }
+> ```
+>
+> ###### Yaf_Exception_LoadFailed_Controller
+>
+> 继承自 Yaf_Exception_LoadFailed，在找不到路由指定的控制器时抛出。
+>
+> ```php
+> Yaf_Exception_LoadFailed_Controller extends Yaf_Exception_LoadFailed
+> {
+>     protected string code = YAF_ERR_NOTFOUND_CONTROLLER;
+> }
+> ```
+>
+> ###### Yaf_Exception_LoadFailed_Action
+>
+> 继承自 Yaf_Exception_LoadFailed，在找不到路由指定的动作时抛出。
+>
+> ```php
+> Yaf_Exception_LoadFailed_Action extends Yaf_Exception_LoadFailed
+> {
+>     protected string code = YAF_ERR_NOTFOUND_ACTION;
+> }
+> ```
+>
+> ###### Yaf_Exception_LoadFailed_View
+>
+> 继承自 Yaf_Exception_LoadFailed，在找不到路由指定的模板时抛出。
+>
+> ```php
+> Yaf_Exception_LoadFailed_View extends Yaf_Exception_LoadFailed
+> {
+>     protected string code = YAF_ERR_NOTFOUND_View;
+> }
+> ```
+>
+> ###### Yaf_Exception_TypeError
+>
+> 继承自 Yaf_Exception，在关键逻辑参数出错时抛出
+>
+> ```php
+> Yaf_Exception_TypeError extends Yaf_Exception
+> {
+>     protected string code = YAF_ERR_TYPE_ERROR;
+> }
+> ```

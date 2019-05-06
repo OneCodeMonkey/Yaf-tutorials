@@ -3796,12 +3796,120 @@ class IndexController extends Yaf_Controller_Abstract
 {
     public function init()
     {
-        $this->getResponse()->prependBody("hello world");
+        $this->getResponse()->preprendBody("hello world");
     }
 }
 ```
 
+###### Yaf_Response_Abstract::getBody
 
+```php
+public string Yaf_Response_Abstract::getBody();
+```
+
+参数：void
+
+返回值：成功则返回已设置的 body 值，失败返回 NULL
+
+例：Yaf_Response_Abstract::getBody
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        echo $this->getResponse()->getBody();
+    }
+}
+```
+
+###### Yaf_Response_Abstract::clearBody
+
+```php
+public boolean Yaf_Response_Abstract::clearBody(); 
+```
+
+参数：void
+
+返回值：成功返回 Yaf_Response_Abstract，失败返回 FALSE
+
+例：Yaf_Response_Abstract::clearBody
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $this->getResponse()->clearBody();
+    }
+}
+```
+
+###### Yaf_Response_Abstract::response
+
+```php
+public boolean Yaf_Response_Abstract::response();
+```
+
+发送响应给请求端
+
+参数：void
+
+返回值：成功返回TRUE，失败返回 FALSE
+
+例：Yaf_Response_Abstract::response
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $this->getResponse()->response();
+    }
+}
+```
+
+###### Yaf_Response_Abstract::setRedirect
+
+```php
+public boolean Yaf_Response_Abstract::setRedirect(string $url);
+```
+
+重定向请求到 URL
+
+> 注意：和 Yaf_Controller_Abstract::forward 不同的是，这个重定向是 HTTP 3.1 重定向
+
+参数：$url:  要重定向到的 URL
+
+返回值：成功返回 Yaf_Response_Abstract,  失败返回 FALSE
+
+例：Yaf_Response_Abstract::setRedirect
+
+```php
+<?php
+class IndexController extends Yaf_Controller_Abstract
+{
+    public function init()
+    {
+        $this->getResponse()->setRedirect("http://{hostname}");
+    }
+}
+```
+
+###### Yaf_Response_Abstract::__toString
+
+```php
+public string Yaf_Response_Abstract::__toString();
+```
+
+魔术方法
+
+参数: void
+
+返回值：Yaf_Response_Abstract 中的 body 值
 
 #### 11_14.Yaf_Router
 
